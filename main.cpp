@@ -52,8 +52,8 @@ typedef struct _RouteFunctionArgs {
 typedef struct _MapInfo {
 	int routeStoringMethod, ballCount;
 	double ballR, moveSpeed;
-	int colorCount;
-	IMAGE* imgs,*ballImgs;
+	int colorCount,imgCount;
+	IMAGE* imgs,*ballImgs,*ballMaskImgs;
 	int maxLimit;//对于存点而言，是点的数目；对于存方程而言，是方程可取最大值
 	Point* pointsArray;
 	RouteFunctionArgs* rfag;//route function args group
@@ -75,6 +75,9 @@ void computingBallList();
 void paintImage(MajorData& md);
 void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount);
 void viewBallList(BallList* pbl);
+
+//TODO:free!!!
+
 
 int main() {
 	MajorData md;
@@ -184,10 +187,28 @@ MapInfo loadingMapInfo(int method, char* dir) {
 
 	if (fscanf(pf, "%s %d %lf %lf %d", routeStoringMethodString, &mi.ballCount, &mi.ballR, &mi.moveSpeed, &mi.colorCount) != 5)
 		longjmp(env, 2);
+	
+	mi.ballImgs = new IMAGE[mi.colorCount];
+	mi.ballMaskImgs = new IMAGE[mi.colorCount];
+	if (!mi.ballImgs||!mi.ballMaskImgs)
+		longjmp(env, 4);
+	char strI[10], imgDir[100], imgMaskDir[100];//C语言处理字符串是真的麻烦Orz
 	for (int i = 0; i < mi.colorCount; i++) {
-
+		sprintf(strI, "%d", i);
+		strcpy(imgDir, "image\\fish_");
+		strcpy(imgMaskDir, "image\\fish_mask_");
+		strcat(strcat(imgDir, strI), ".jpg");
+		strcat(strcat(imgMaskDir, strI), ".jpg");
+		loadimage(&mi.ballImgs[i], imgDir);
+		loadimage(mi.ballMaskImgs+i, imgMaskDir);
 	}
 
+	mi.imgs = new IMAGE;
+	loadimage(mi.imgs, "image\\background.jpg");
+	
+	if (fscanf(pf, "%d", &mi.imgCount) != 1)
+		longjmp(env, 2);
+	
 
 	if (strcmp(routeStoringMethodString, "STORE_BY_POINTS") == 0) {
 		mi.routeStoringMethod = STORE_BY_POINTS;
@@ -286,12 +307,20 @@ void viewBallList(BallList* pbl) {
 	return;
 }
 
-void paintBallList(BallList* pbl, MapInfo* pmi) {
-	BallOnList* p = pbl->firstBall;
+void paintBallList(BallList& bl, MapInfo* pmi) {
+	double thisBallPosition = bl.firstBallPosition;
+	BallOnList* p = bl.firstBall;
+	putimage(0, 0, pmi->imgs);
 	while (p) {
-
+		//printf("[DEBUG]thisBallPosition=%lf\n", thisBallPosition);
+		Point point = route(*pmi, thisBallPosition);
+		//printf("[DEBUG]pointx=%lf, pointy=%lf\n", point.x,point.y);
+		putimage(point.x, point.y, pmi->ballMaskImgs + p->color, SRCAND);
+		putimage(point.x, point.y, pmi->ballImgs+p->color, SRCINVERT);
 		p = p->next;
-	}
+		thisBallPosition -= pmi->ballR*2;
+	} 
+	bl.firstBallPosition += pmi->moveSpeed;
 	return;
 }
 
@@ -311,16 +340,24 @@ void computingBallList() {
 void paintImage(MajorData& md) {
 	BeginBatchDraw();//开始批量绘图
 	putimage(0, 0, &back);
+	paintBallList(md.ballList, &md.mi);
+	/*
 	//	putimage(i, 100, &p2);
 	Point p = route(md.mi, i);
 	putimage(p.x, p.y, &p1, SRCAND);
 	putimage(p.x, p.y, &p2, SRCINVERT);
+	*/
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
-	i++;
+	//i++;
 	//if (i >= md.mi.maxLimit)
-	if (i >= 400)
+	//if (i >= 400)
 		//md.gameEnd = true;
-		i = 0;
+		//i = 0;
+
+
+	//仅供测试时使用
+	if (md.ballList.firstBallPosition > 400)
+		md.ballList.firstBallPosition = 0;
 
 
 	return;

@@ -17,7 +17,7 @@
 #define IO_ERROR -2
 #define UNKNOWN_STORING_METHOD -3
 
-
+#define FLYING_BALL_ARRAY_SIZE 100
 
 //TODO:删除临时测试用的全局变量
 IMAGE back;
@@ -55,14 +55,28 @@ typedef struct _Zuma {
 	Point position;
 	int thisBallColor,nextBallColor;
 	double angle;
+	int CDremain;
 }Zuma;
+
+typedef struct _FlyingBall {
+	Point position;
+	bool launched;
+	int color;
+	double angle;
+}FlyingBall;
+
+typedef struct _FlyingBallArray {
+	int size;
+	FlyingBall* pfb;
+}FlyingBallArray;
 
 typedef struct _MapInfo {
 	int routeStoringMethod, ballCount;
-	double ballR, moveSpeed;
+	double ballR, moveSpeed, flySpeed;
 	int colorCount,imgCount;
 	IMAGE* imgs,*ballImgs,*ballMaskImgs;
-	Point zumaPosition;
+	Point zumaPosition,deltaMouthPosition,deltaHolePosition;
+	int shootingCD;
 	int maxLimit;//对于存点而言，是点的数目；对于存方程而言，是方程可取最大值
 	Point* pointsArray;
 	RouteFunctionArgs* rfag;//route function args group
@@ -74,28 +88,32 @@ typedef struct _MajorData {
 	MapInfo mi;
 	BallList ballList;
 	Zuma zuma;
+	FlyingBallArray flyingBallArray;
 }MajorData;
 
 void coreGaming(MajorData md);
 MapInfo loadingMapInfo(int method, char* dir);
 void operatingInput(MajorData& md);
-void computingFlyingBalls();
+void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi);
 void computingBallList(BallList& bl, MapInfo* pmi);
 void paintImage(MajorData& md);
 void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount);
 void viewBallList(BallList* pbl);
 void initZuma(MajorData& md);
 void paintZuma(Zuma zuma, MapInfo* pmi);
-void operateMouseEvents(Zuma& zuma);
+void operateMouseEvents(MajorData& md);
+void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi);
+void generateFlyingBall(FlyingBallArray& fba, int colorCount);
+void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position);
+bool isOutOfScreen(Point p);
 //TODO:free!!!
-
+//TODO:拆分函数！！
 
 int main() {
-	printf("%.2lf", atan(0));
 	MajorData md;
 	printf("[DEBUG]MajorData:%dB,MapInfo:%dB\n", (int)sizeof(MajorData), (int)sizeof(MapInfo));
 	int zoomingMultiple = 1;//图像缩放比例，默认为1，可在设置中调节
-
+	
 
 	/*
 	version 0.1:没有主界面/暂停菜单/选项菜单，只有游戏核心
@@ -162,12 +180,15 @@ void coreGaming(MajorData md) {
 	md.mi = loadingMapInfo(0, md.mapDir);
 	initBallList(&md.ballList, md.mi.ballCount, (unsigned int)time(0), md.mi.colorCount);
 	initZuma(md);
+	initFlyingBallArray(md.flyingBallArray,&md.mi);
 	//viewBallList(&md.ballList);
 	while (!md.gameEnd) {
 		operatingInput(md);//处理玩家操作
-		computingFlyingBalls();//计算飞出球
+		computingFlyingBalls(md.flyingBallArray,md.zuma,&md.mi);//计算飞出球
 		computingBallList(md.ballList,&md.mi);//计算列上球
 		paintImage(md);//绘制图像
+		if (md.zuma.CDremain > 0)
+			md.zuma.CDremain--;
 		//Sleep(500);	//暂停
 		//TODO:测试一下要不要计时，然后sleep(1000/fps-计时)
 	}
@@ -196,10 +217,10 @@ MapInfo loadingMapInfo(int method, char* dir) {
 		后面的：点坐标/路径函数参数
 	*/
 
-	if (fscanf(pf, "%s %d %d %lf %lf", routeStoringMethodString, &mi.colorCount, &mi.ballCount, &mi.ballR, &mi.moveSpeed) != 5)
+	if (fscanf(pf, "%s %d %d %lf %lf %lf", routeStoringMethodString, &mi.colorCount, &mi.ballCount, &mi.ballR, &mi.moveSpeed,&mi.flySpeed) != 6)
 		longjmp(env, 2);
 	
-	mi.ballImgs = new IMAGE[mi.colorCount];
+	mi.ballImgs = new IMAGE[mi.colorCount];//OOP???
 	mi.ballMaskImgs = new IMAGE[mi.colorCount];
 	if (!mi.ballImgs||!mi.ballMaskImgs)
 		longjmp(env, 4);
@@ -220,7 +241,8 @@ MapInfo loadingMapInfo(int method, char* dir) {
 	//if (fscanf(pf, "%d", &mi.imgCount) != 1)
 	//	longjmp(env, 2);
 	
-	if (fscanf(pf, "%lf %lf", &mi.zumaPosition.x, &mi.zumaPosition.y) != 2)
+	if (fscanf(pf, "%lf %lf %lf %lf %lf %lf %d", &mi.zumaPosition.x, &mi.zumaPosition.y,
+		&mi.deltaMouthPosition.x, &mi.deltaMouthPosition.y, &mi.deltaHolePosition.x, &mi.deltaHolePosition.y,&mi.shootingCD) != 7)
 		longjmp(env, 2);
 	printf("loaded zuma position:x=%.2lf, y=%.2lf", mi.zumaPosition.x, mi.zumaPosition.y);
 	loadimage(mi.imgs+2, "image\\zuma.jpg");
@@ -332,7 +354,7 @@ void paintBallList(BallList& bl, MapInfo* pmi) {
 		Point point = route(*pmi, thisBallPosition);
 		//printf("[DEBUG]pointx=%lf, pointy=%lf\n", point.x,point.y);
 		putimage(point.x, point.y, pmi->ballMaskImgs + p->color, SRCAND);
-		putimage(point.x, point.y, pmi->ballImgs+p->color, SRCINVERT);
+		putimage(point.x, point.y, pmi->ballImgs + p->color, SRCINVERT);
 		p = p->next;
 		thisBallPosition -= pmi->ballR*2;
 	} 
@@ -341,11 +363,14 @@ void paintBallList(BallList& bl, MapInfo* pmi) {
 
 void initZuma(MajorData& md) {
 	md.zuma.position = md.mi.zumaPosition;
+	md.zuma.CDremain = 0;
 	return;
 }
 
 void paintZuma(Zuma zuma, MapInfo* pmi) {
 	//printf("paintZuma,x=%.2lf,y=%.2lf\n", zuma.position.x, zuma.position.y);
+	rotateAndPaint(pmi->imgs + 2, pmi->imgs + 3, zuma.angle + PI / 2, zuma.position);
+	/*
 	IMAGE rotatedZuma, rotatedZumaMask;
 	rotateimage(&rotatedZuma, pmi->imgs + 2, zuma.angle + PI / 2, BLACK, true, true);
 	rotateimage(&rotatedZumaMask, pmi->imgs + 3, zuma.angle + PI / 2, WHITE, true, true);
@@ -354,15 +379,96 @@ void paintZuma(Zuma zuma, MapInfo* pmi) {
 	startingPositionY = zuma.position.y - rotatedZuma.getheight()/2;
 	putimage(startingPositionX, startingPositionY, &rotatedZumaMask, SRCAND);
 	putimage(startingPositionX, startingPositionY, &rotatedZuma, SRCINVERT);
+	*/
+	
+
+
+	return;
+}
+
+
+void rotateAndPaint(IMAGE* img,IMAGE* imgMask,double angle,Point position) {
+	IMAGE rotatedImg, rotatedImgMask;
+	rotateimage(&rotatedImg, img, angle, BLACK, true, true);
+	rotateimage(&rotatedImgMask, imgMask, angle, WHITE, true, true);
+	double startingPositionX, startingPositionY;
+	startingPositionX = position.x - rotatedImg.getwidth() / 2;
+	startingPositionY = position.y - rotatedImg.getheight() / 2;
+	putimage(startingPositionX, startingPositionY, &rotatedImgMask, SRCAND);
+	putimage(startingPositionX, startingPositionY, &rotatedImg, SRCINVERT);
+	return;
+}
+
+void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi) {
+	fba.pfb = (FlyingBall*)malloc(sizeof(FlyingBall) * FLYING_BALL_ARRAY_SIZE);
+	fba.size = 0;
+	generateFlyingBall(fba, pmi->colorCount);
+	generateFlyingBall(fba, pmi->colorCount);
+	return;
+}
+
+void generateFlyingBall(FlyingBallArray& fba,int colorCount) {
+	FlyingBall newBall;
+	//有些局部变量只是为了代码看起来美观，不过牺牲了效率，emm，或许其实开优化之后都一样？
+	newBall.color = rand() % colorCount;
+	newBall.launched = false;
+	fba.pfb[fba.size] = newBall;
+	fba.size++;
+	return;
+}
+
+void removeFlyingBall(FlyingBallArray& fba, int index) {
+	for (int i = index+1; i < fba.size; i++) {
+		fba.pfb[i - 1] = fba.pfb[i];
+	}
+	fba.size--;
+	return;
+}
+
+bool isOutOfScreen(Point p) {
+	//严格来说应该要计算旋转后有没有出画面，这里就算锚点是否出画面了，算是一种省事而节约资源的方法
+	//TODO：写一个重载的isOutOfScreen，计算旋转后的图形是否出画面
+	return !(0 <= p.x && p.x <= WIDTH && 0 <= p.y && p.y <= HEIGHT);
+}
+//TODO：更新WIDTH和HEIGHT为动态窗口大小
+
+void launchFlyingBall(FlyingBallArray& fba, int colorCount) {
+	fba.pfb[fba.size - 3].launched = true;
+	generateFlyingBall(fba,colorCount);
+	return;
+}
+
+void paintFlyingBall(FlyingBallArray& fba,Zuma zuma, MapInfo* pmi) {//TODO:绘制镜像翻转的鱼（flyingball），使之眼睛朝上？
+	for (int i = 0; i < fba.size; i++) {
+		rotateAndPaint(pmi->ballImgs + fba.pfb[i].color, pmi->ballMaskImgs + fba.pfb[i].color, fba.pfb[i].angle, fba.pfb[i].position);
+	}
 	return;
 }
 
 void operatingInput(MajorData& md) {
-	operateMouseEvents(md.zuma);
+	operateMouseEvents(md);
 	return;
 }
 
-void computingFlyingBalls() {
+void computingFlyingBalls(FlyingBallArray& fba,Zuma zuma,MapInfo* pmi) {
+	fba.pfb[fba.size - 2].position.x = zuma.position.x
+		+ pmi->deltaMouthPosition.y * cos(zuma.angle)+ pmi->deltaMouthPosition.x * sin(zuma.angle);
+	fba.pfb[fba.size - 2].position.y = zuma.position.y
+		- pmi->deltaMouthPosition.y * sin(zuma.angle)+ pmi->deltaMouthPosition.x * cos(zuma.angle);
+	fba.pfb[fba.size - 1].position.x = zuma.position.x
+		+ pmi->deltaHolePosition.y * cos(zuma.angle)+ pmi->deltaHolePosition.x * sin(zuma.angle);
+	fba.pfb[fba.size - 1].position.y = zuma.position.y
+		- pmi->deltaHolePosition.y * sin(zuma.angle)+ pmi->deltaHolePosition.x * cos(zuma.angle);
+	fba.pfb[fba.size - 2].angle = zuma.angle;
+	fba.pfb[fba.size - 1].angle = zuma.angle;
+	for (int i = 0; i < fba.size - 2; i++) {
+		fba.pfb[i].position.x += pmi->flySpeed*cos(fba.pfb[i].angle);//TODO:增加飞行速度
+		fba.pfb[i].position.y -= pmi->flySpeed*sin(fba.pfb[i].angle);
+		if (isOutOfScreen(fba.pfb[i].position)) {
+			removeFlyingBall(fba, i);
+		}
+	}
+
 	return;
 }
 
@@ -375,6 +481,7 @@ void paintImage(MajorData& md) {
 	BeginBatchDraw();//开始批量绘图
 	putimage(0, 0, &back);
 	paintBallList(md.ballList, &md.mi);
+	paintFlyingBall(md.flyingBallArray,md.zuma, &md.mi);
 	paintZuma(md.zuma,&md.mi);
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
 
@@ -387,19 +494,23 @@ void paintImage(MajorData& md) {
 }
 
 
-void operateMouseEvents(Zuma& zuma) {
+void operateMouseEvents(MajorData& md) {
 	MOUSEMSG mmsg;
 	double deltaX, deltaY, tanOfAngle;
 	while (MouseHit()) {
 		mmsg = GetMouseMsg();
-		deltaX = mmsg.x - zuma.position.x;
-		deltaY = -(mmsg.y - zuma.position.y);
+		deltaX = mmsg.x - md.zuma.position.x;
+		deltaY = -(mmsg.y - md.zuma.position.y);
 		if (deltaX == 0)
 			deltaX = 0.0001;
 		tanOfAngle = deltaY / deltaX;
-		zuma.angle = atan(tanOfAngle);
+		md.zuma.angle = atan(tanOfAngle);
 		if (deltaX<0)
-			zuma.angle += PI;
+			md.zuma.angle += PI;
+		if (mmsg.mkLButton && md.zuma.CDremain == 0) {
+			launchFlyingBall(md.flyingBallArray, md.mi.colorCount);
+			md.zuma.CDremain = md.mi.shootingCD;
+		}
 		//printf("mouse:x=%d,y=%d,deltaX=%.2lf,deltaY=%.2lf,tanOfAngle=%.4lf,angle=%.4lf\n", mmsg.x, mmsg.y,deltaX,deltaY,tanOfAngle,zuma.angle);
 	}
 	return;

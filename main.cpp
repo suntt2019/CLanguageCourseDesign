@@ -60,7 +60,7 @@ typedef struct _Zuma {
 
 typedef struct _FlyingBall {
 	Point position;
-	bool launched;
+	//bool launched;//Õâ¶«Î÷ÆäÊµÃ»ÓÃ
 	int color;
 	double angle;
 }FlyingBall;
@@ -94,7 +94,7 @@ typedef struct _MajorData {
 void coreGaming(MajorData md);
 MapInfo loadingMapInfo(int method, char* dir);
 void operatingInput(MajorData& md);
-void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi);
+void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma,BallList& bl, MapInfo* pmi);
 void computingBallList(BallList& bl, MapInfo* pmi);
 void paintImage(MajorData& md);
 void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount);
@@ -105,7 +105,12 @@ void operateMouseEvents(MajorData& md);
 void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi);
 void generateFlyingBall(FlyingBallArray& fba, int colorCount);
 void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position);
-bool isOutOfScreen(Point p);
+inline bool isOutOfScreen(Point p);
+void justPaint(IMAGE* img, IMAGE* imgMask, Point position);
+inline bool testPointDistance(Point p1, Point p2, double minD);
+void insertBallList(BallList& bl,BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index);
+void removeFlyingBall(FlyingBallArray& fba, int index);
+inline bool compareDistance(Point p, Point pTrue, Point pFalse);
 //TODO:free!!!
 //TODO:²ğ·Öº¯Êı£¡£¡
 
@@ -184,7 +189,7 @@ void coreGaming(MajorData md) {
 	//viewBallList(&md.ballList);
 	while (!md.gameEnd) {
 		operatingInput(md);//´¦ÀíÍæ¼Ò²Ù×÷
-		computingFlyingBalls(md.flyingBallArray,md.zuma,&md.mi);//¼ÆËã·É³öÇò
+		computingFlyingBalls(md.flyingBallArray,md.zuma,md.ballList,&md.mi);//¼ÆËã·É³öÇò
 		computingBallList(md.ballList,&md.mi);//¼ÆËãÁĞÉÏÇò
 		paintImage(md);//»æÖÆÍ¼Ïñ
 		if (md.zuma.CDremain > 0)
@@ -244,7 +249,7 @@ MapInfo loadingMapInfo(int method, char* dir) {
 	if (fscanf(pf, "%lf %lf %lf %lf %lf %lf %d", &mi.zumaPosition.x, &mi.zumaPosition.y,
 		&mi.deltaMouthPosition.x, &mi.deltaMouthPosition.y, &mi.deltaHolePosition.x, &mi.deltaHolePosition.y,&mi.shootingCD) != 7)
 		longjmp(env, 2);
-	printf("loaded zuma position:x=%.2lf, y=%.2lf", mi.zumaPosition.x, mi.zumaPosition.y);
+	//printf("loaded zuma position:x=%.2lf, y=%.2lf", mi.zumaPosition.x, mi.zumaPosition.y);
 	loadimage(mi.imgs+2, "image\\zuma.jpg");
 	loadimage(mi.imgs+3, "image\\zuma_mask.jpg");
 
@@ -333,6 +338,32 @@ void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount) {
 	return;
 }
 
+void insertBallList(BallList& bl,BallOnList* pbol_prev,BallOnList* pbol_next, FlyingBallArray& fba,int index) {
+	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
+	if (!p){
+		printf("[Excption] initBallList: excption when creating ball.\n");
+		return;
+	}
+	p->color = fba.pfb[index].color;
+	p->prev = pbol_prev;
+	p->next = pbol_next;
+	printf("fbp=%lf,", bl.firstBallPosition);
+	bl.firstBallPosition += 0.5 * 40;//ÓÉÓÚÃ»ÓĞÈ·¶¨Â·¾¶ºÍ³¤¶È¹ØÏµ£¬ÕâÀïÖ»ÄÜÏ¹¸ãÁË
+	printf("fbp=%lf\n", bl.firstBallPosition);
+	if (pbol_prev) {
+		pbol_prev->next = p;
+	}else {
+		bl.firstBall = p;
+		bl.firstBallPosition += 0.5 * 40;
+	}
+	if(pbol_next)
+		pbol_next->prev = p;
+	else 
+		bl.firstBallPosition -= 0.5 * 40;
+	removeFlyingBall(fba, index);
+	return;
+}
+
 void viewBallList(BallList* pbl) {
 	printf("[viewBallList] firstBallPosition=%.2lf \n", pbl->firstBallPosition);
 	BallOnList* p = pbl->firstBall;
@@ -350,11 +381,15 @@ void paintBallList(BallList& bl, MapInfo* pmi) {
 	BallOnList* p = bl.firstBall;
 	putimage(0, 0, pmi->imgs);
 	while (p) {
+		
+		//rotateAndPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, 0, route(*pmi, thisBallPosition));
+		justPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, route(*pmi, thisBallPosition));
+		//TODO:½«ÁĞÉÏÇò³¯Ïò¸ÄÎªÂ·¾¶Ò»½×µ¼
 		//printf("[DEBUG]thisBallPosition=%lf\n", thisBallPosition);
-		Point point = route(*pmi, thisBallPosition);
+		//Point point = route(*pmi, thisBallPosition);
 		//printf("[DEBUG]pointx=%lf, pointy=%lf\n", point.x,point.y);
-		putimage(point.x, point.y, pmi->ballMaskImgs + p->color, SRCAND);
-		putimage(point.x, point.y, pmi->ballImgs + p->color, SRCINVERT);
+		//putimage(point.x, point.y, pmi->ballMaskImgs + p->color, SRCAND);
+		//putimage(point.x, point.y, pmi->ballImgs + p->color, SRCINVERT);
 		p = p->next;
 		thisBallPosition -= pmi->ballR*2;
 	} 
@@ -370,18 +405,6 @@ void initZuma(MajorData& md) {
 void paintZuma(Zuma zuma, MapInfo* pmi) {
 	//printf("paintZuma,x=%.2lf,y=%.2lf\n", zuma.position.x, zuma.position.y);
 	rotateAndPaint(pmi->imgs + 2, pmi->imgs + 3, zuma.angle + PI / 2, zuma.position);
-	/*
-	IMAGE rotatedZuma, rotatedZumaMask;
-	rotateimage(&rotatedZuma, pmi->imgs + 2, zuma.angle + PI / 2, BLACK, true, true);
-	rotateimage(&rotatedZumaMask, pmi->imgs + 3, zuma.angle + PI / 2, WHITE, true, true);
-	double startingPositionX, startingPositionY;
-	startingPositionX = zuma.position.x - rotatedZuma.getwidth()/ 2;
-	startingPositionY = zuma.position.y - rotatedZuma.getheight()/2;
-	putimage(startingPositionX, startingPositionY, &rotatedZumaMask, SRCAND);
-	putimage(startingPositionX, startingPositionY, &rotatedZuma, SRCINVERT);
-	*/
-	
-
 
 	return;
 }
@@ -399,6 +422,13 @@ void rotateAndPaint(IMAGE* img,IMAGE* imgMask,double angle,Point position) {
 	return;
 }
 
+void justPaint(IMAGE* img, IMAGE* imgMask, Point position) {
+	putimage(position.x-imgMask->getwidth()/2, position.y-imgMask->getheight()/2, imgMask, SRCAND);
+	putimage(position.x-img->getwidth()/2, position.y-img->getheight()/2, img, SRCINVERT);
+	return;
+}
+//Í³Ò»È·¶¨intºÍdouble
+
 void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi) {
 	fba.pfb = (FlyingBall*)malloc(sizeof(FlyingBall) * FLYING_BALL_ARRAY_SIZE);
 	fba.size = 0;
@@ -411,7 +441,7 @@ void generateFlyingBall(FlyingBallArray& fba,int colorCount) {
 	FlyingBall newBall;
 	//ÓĞĞ©¾Ö²¿±äÁ¿Ö»ÊÇÎªÁË´úÂë¿´ÆğÀ´ÃÀ¹Û£¬²»¹ıÎşÉüÁËĞ§ÂÊ£¬emm£¬»òĞíÆäÊµ¿ªÓÅ»¯Ö®ºó¶¼Ò»Ñù£¿
 	newBall.color = rand() % colorCount;
-	newBall.launched = false;
+	//newBall.launched = false;
 	fba.pfb[fba.size] = newBall;
 	fba.size++;
 	return;
@@ -425,7 +455,7 @@ void removeFlyingBall(FlyingBallArray& fba, int index) {
 	return;
 }
 
-bool isOutOfScreen(Point p) {
+inline bool isOutOfScreen(Point p) {
 	//ÑÏ¸ñÀ´ËµÓ¦¸ÃÒª¼ÆËãĞı×ªºóÓĞÃ»ÓĞ³ö»­Ãæ£¬ÕâÀï¾ÍËãÃªµãÊÇ·ñ³ö»­ÃæÁË£¬ËãÊÇÒ»ÖÖÊ¡ÊÂ¶ø½ÚÔ¼×ÊÔ´µÄ·½·¨
 	//TODO£ºĞ´Ò»¸öÖØÔØµÄisOutOfScreen£¬¼ÆËãĞı×ªºóµÄÍ¼ĞÎÊÇ·ñ³ö»­Ãæ
 	return !(0 <= p.x && p.x <= WIDTH && 0 <= p.y && p.y <= HEIGHT);
@@ -433,7 +463,7 @@ bool isOutOfScreen(Point p) {
 //TODO£º¸üĞÂWIDTHºÍHEIGHTÎª¶¯Ì¬´°¿Ú´óĞ¡
 
 void launchFlyingBall(FlyingBallArray& fba, int colorCount) {
-	fba.pfb[fba.size - 3].launched = true;
+	//fba.pfb[fba.size - 3].launched = true;
 	generateFlyingBall(fba,colorCount);
 	return;
 }
@@ -445,12 +475,36 @@ void paintFlyingBall(FlyingBallArray& fba,Zuma zuma, MapInfo* pmi) {//TODO:»æÖÆ¾
 	return;
 }
 
+void testCrash(BallList& bl,FlyingBallArray& fba,int index,MapInfo* pmi) {
+	BallOnList* p = bl.firstBall;
+	double thisBallPosition = bl.firstBallPosition;
+	while (p) {
+		if (testPointDistance(route(*pmi, thisBallPosition), fba.pfb[index].position, pmi->ballR * 2)) {
+			if(compareDistance(fba.pfb[index].position,route(*pmi, thisBallPosition-1), route(*pmi, thisBallPosition+1)))
+				insertBallList(bl,p->prev, p, fba, index);
+			else
+				insertBallList(bl, p, p->next, fba, index);
+			break;
+		}
+		p = p->next;
+		thisBallPosition -= pmi->ballR * 2;
+	}
+}
+
+inline bool testPointDistance(Point p1, Point p2,double minD) {
+	return pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2)<pow(minD,2);
+}
+
+inline bool compareDistance(Point p, Point pTrue, Point pFalse) {
+	return pow((p.x - pTrue.x), 2) + pow((p.y - pTrue.y), 2) < pow((p.x - pFalse.x), 2) + pow((p.y - pFalse.y), 2);
+}
+
 void operatingInput(MajorData& md) {
 	operateMouseEvents(md);
 	return;
 }
 
-void computingFlyingBalls(FlyingBallArray& fba,Zuma zuma,MapInfo* pmi) {
+void computingFlyingBalls(FlyingBallArray& fba,Zuma zuma,BallList& bl,MapInfo* pmi) {
 	fba.pfb[fba.size - 2].position.x = zuma.position.x
 		+ pmi->deltaMouthPosition.y * cos(zuma.angle)+ pmi->deltaMouthPosition.x * sin(zuma.angle);
 	fba.pfb[fba.size - 2].position.y = zuma.position.y
@@ -462,11 +516,12 @@ void computingFlyingBalls(FlyingBallArray& fba,Zuma zuma,MapInfo* pmi) {
 	fba.pfb[fba.size - 2].angle = zuma.angle;
 	fba.pfb[fba.size - 1].angle = zuma.angle;
 	for (int i = 0; i < fba.size - 2; i++) {
-		fba.pfb[i].position.x += pmi->flySpeed*cos(fba.pfb[i].angle);//TODO:Ôö¼Ó·ÉĞĞËÙ¶È
+		fba.pfb[i].position.x += pmi->flySpeed*cos(fba.pfb[i].angle);
 		fba.pfb[i].position.y -= pmi->flySpeed*sin(fba.pfb[i].angle);
 		if (isOutOfScreen(fba.pfb[i].position)) {
 			removeFlyingBall(fba, i);
 		}
+		testCrash( bl, fba,i, pmi);
 	}
 
 	return;
@@ -486,8 +541,8 @@ void paintImage(MajorData& md) {
 	EndBatchDraw();//½áÊøÅúÁ¿»æÍ¼£¬½«»æÖÆºÃµÄÍ¼Æ¬Í³Ò»Ìùµ½ÆÁÄ»ÉÏ¡£	
 
 	//½ö¹©²âÊÔÊ±Ê¹ÓÃ
-	if (md.ballList.firstBallPosition > 400)
-		md.ballList.firstBallPosition = 0;
+	//if (md.ballList.firstBallPosition > 400)
+	//	md.ballList.firstBallPosition = 0;
 
 
 	return;

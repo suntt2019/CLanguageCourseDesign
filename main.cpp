@@ -6,6 +6,8 @@
 #include <math.h>
 #include <time.h>
 
+#define PI 3.14159269
+
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -49,11 +51,18 @@ typedef struct _RouteFunctionArgs {
 	double Ry, Ny, Oy, Py, Ky, By;
 }RouteFunctionArgs;
 
+typedef struct _Zuma {
+	Point position;
+	int thisBallColor,nextBallColor;
+	double angle;
+}Zuma;
+
 typedef struct _MapInfo {
 	int routeStoringMethod, ballCount;
 	double ballR, moveSpeed;
 	int colorCount,imgCount;
 	IMAGE* imgs,*ballImgs,*ballMaskImgs;
+	Point zumaPosition;
 	int maxLimit;//对于存点而言，是点的数目；对于存方程而言，是方程可取最大值
 	Point* pointsArray;
 	RouteFunctionArgs* rfag;//route function args group
@@ -64,22 +73,25 @@ typedef struct _MajorData {
 	char* mapDir;
 	MapInfo mi;
 	BallList ballList;
-
+	Zuma zuma;
 }MajorData;
 
 void coreGaming(MajorData md);
 MapInfo loadingMapInfo(int method, char* dir);
-void operatingInput();
+void operatingInput(MajorData& md);
 void computingFlyingBalls();
-void computingBallList();
+void computingBallList(BallList& bl, MapInfo* pmi);
 void paintImage(MajorData& md);
 void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount);
 void viewBallList(BallList* pbl);
-
+void initZuma(MajorData& md);
+void paintZuma(Zuma zuma, MapInfo* pmi);
+void operateMouseEvents(Zuma& zuma);
 //TODO:free!!!
 
 
 int main() {
+	printf("%.2lf", atan(0));
 	MajorData md;
 	printf("[DEBUG]MajorData:%dB,MapInfo:%dB\n", (int)sizeof(MajorData), (int)sizeof(MapInfo));
 	int zoomingMultiple = 1;//图像缩放比例，默认为1，可在设置中调节
@@ -149,13 +161,12 @@ void coreGaming(MajorData md) {
 	md.gameEnd = false;
 	md.mi = loadingMapInfo(0, md.mapDir);
 	initBallList(&md.ballList, md.mi.ballCount, (unsigned int)time(0), md.mi.colorCount);
+	initZuma(md);
 	//viewBallList(&md.ballList);
 	while (!md.gameEnd) {
-		/*
-		operatingInput();//处理玩家操作
+		operatingInput(md);//处理玩家操作
 		computingFlyingBalls();//计算飞出球
-		computingBallList();//计算列上球
-		*/
+		computingBallList(md.ballList,&md.mi);//计算列上球
 		paintImage(md);//绘制图像
 		//Sleep(500);	//暂停
 		//TODO:测试一下要不要计时，然后sleep(1000/fps-计时)
@@ -185,7 +196,7 @@ MapInfo loadingMapInfo(int method, char* dir) {
 		后面的：点坐标/路径函数参数
 	*/
 
-	if (fscanf(pf, "%s %d %lf %lf %d", routeStoringMethodString, &mi.ballCount, &mi.ballR, &mi.moveSpeed, &mi.colorCount) != 5)
+	if (fscanf(pf, "%s %d %d %lf %lf", routeStoringMethodString, &mi.colorCount, &mi.ballCount, &mi.ballR, &mi.moveSpeed) != 5)
 		longjmp(env, 2);
 	
 	mi.ballImgs = new IMAGE[mi.colorCount];
@@ -203,12 +214,17 @@ MapInfo loadingMapInfo(int method, char* dir) {
 		loadimage(mi.ballMaskImgs+i, imgMaskDir);
 	}
 
-	mi.imgs = new IMAGE;
+	mi.imgs = new IMAGE[10];//TODO:增加前景功能（之前测试较大前进会导致明显性能下降）
 	loadimage(mi.imgs, "image\\background.jpg");
 	
-	if (fscanf(pf, "%d", &mi.imgCount) != 1)
-		longjmp(env, 2);
+	//if (fscanf(pf, "%d", &mi.imgCount) != 1)
+	//	longjmp(env, 2);
 	
+	if (fscanf(pf, "%lf %lf", &mi.zumaPosition.x, &mi.zumaPosition.y) != 2)
+		longjmp(env, 2);
+	printf("loaded zuma position:x=%.2lf, y=%.2lf", mi.zumaPosition.x, mi.zumaPosition.y);
+	loadimage(mi.imgs+2, "image\\zuma.jpg");
+	loadimage(mi.imgs+3, "image\\zuma_mask.jpg");
 
 	if (strcmp(routeStoringMethodString, "STORE_BY_POINTS") == 0) {
 		mi.routeStoringMethod = STORE_BY_POINTS;
@@ -320,45 +336,71 @@ void paintBallList(BallList& bl, MapInfo* pmi) {
 		p = p->next;
 		thisBallPosition -= pmi->ballR*2;
 	} 
-	bl.firstBallPosition += pmi->moveSpeed;
 	return;
 }
 
+void initZuma(MajorData& md) {
+	md.zuma.position = md.mi.zumaPosition;
+	return;
+}
 
-void operatingInput() {
+void paintZuma(Zuma zuma, MapInfo* pmi) {
+	//printf("paintZuma,x=%.2lf,y=%.2lf\n", zuma.position.x, zuma.position.y);
+	IMAGE rotatedZuma, rotatedZumaMask;
+	rotateimage(&rotatedZuma, pmi->imgs + 2, zuma.angle + PI / 2, BLACK, true, true);
+	rotateimage(&rotatedZumaMask, pmi->imgs + 3, zuma.angle + PI / 2, WHITE, true, true);
+	double startingPositionX, startingPositionY;
+	startingPositionX = zuma.position.x - rotatedZuma.getwidth()/ 2;
+	startingPositionY = zuma.position.y - rotatedZuma.getheight()/2;
+	putimage(startingPositionX, startingPositionY, &rotatedZumaMask, SRCAND);
+	putimage(startingPositionX, startingPositionY, &rotatedZuma, SRCINVERT);
+	return;
+}
 
+void operatingInput(MajorData& md) {
+	operateMouseEvents(md.zuma);
+	return;
 }
 
 void computingFlyingBalls() {
-
+	return;
 }
 
-void computingBallList() {
-
+void computingBallList(BallList& bl, MapInfo* pmi) {
+	bl.firstBallPosition += pmi->moveSpeed;
+	return;
 }
 
 void paintImage(MajorData& md) {
 	BeginBatchDraw();//开始批量绘图
 	putimage(0, 0, &back);
 	paintBallList(md.ballList, &md.mi);
-	/*
-	//	putimage(i, 100, &p2);
-	Point p = route(md.mi, i);
-	putimage(p.x, p.y, &p1, SRCAND);
-	putimage(p.x, p.y, &p2, SRCINVERT);
-	*/
+	paintZuma(md.zuma,&md.mi);
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
-	//i++;
-	//if (i >= md.mi.maxLimit)
-	//if (i >= 400)
-		//md.gameEnd = true;
-		//i = 0;
-
 
 	//仅供测试时使用
 	if (md.ballList.firstBallPosition > 400)
 		md.ballList.firstBallPosition = 0;
 
 
+	return;
+}
+
+
+void operateMouseEvents(Zuma& zuma) {
+	MOUSEMSG mmsg;
+	double deltaX, deltaY, tanOfAngle;
+	while (MouseHit()) {
+		mmsg = GetMouseMsg();
+		deltaX = mmsg.x - zuma.position.x;
+		deltaY = -(mmsg.y - zuma.position.y);
+		if (deltaX == 0)
+			deltaX = 0.0001;
+		tanOfAngle = deltaY / deltaX;
+		zuma.angle = atan(tanOfAngle);
+		if (deltaX<0)
+			zuma.angle += PI;
+		//printf("mouse:x=%d,y=%d,deltaX=%.2lf,deltaY=%.2lf,tanOfAngle=%.4lf,angle=%.4lf\n", mmsg.x, mmsg.y,deltaX,deltaY,tanOfAngle,zuma.angle);
+	}
 	return;
 }

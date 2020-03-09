@@ -34,6 +34,7 @@ typedef struct _Point {
 }Point;
 
 typedef struct _BallOnList {
+	double position;
 	ballColor color;
 	struct _BallOnList* prev;
 	struct _BallOnList* next;
@@ -97,7 +98,7 @@ void operatingInput(MajorData& md);
 void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma,BallList& bl, MapInfo* pmi);
 void computingBallList(BallList& bl, MapInfo* pmi);
 void paintImage(MajorData& md);
-void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount);
+void initBallList(BallList* pbl, MapInfo* pmi, unsigned int seed);
 void viewBallList(BallList* pbl);
 void initZuma(MajorData& md);
 void paintZuma(Zuma zuma, MapInfo* pmi);
@@ -111,6 +112,9 @@ inline bool testPointDistance(Point p1, Point p2, double minD);
 void insertBallList(BallList& bl,BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index);
 void removeFlyingBall(FlyingBallArray& fba, int index);
 inline bool compareDistance(Point p, Point pTrue, Point pFalse);
+void initPainting();
+inline Point speed(MapInfo mi, double position);
+double speedValue(MapInfo mi, double position);
 //TODO:free!!!
 //TODO:拆分函数！！
 
@@ -125,7 +129,7 @@ int main() {
 	只能眼看着球列到达终点
 	*/
 	//TODO:增加地图读取控制系统
-	md.mapDir = "maps\\test_function.zmap";
+	md.mapDir = "maps\\test_function-classic.zmap";
 
 
 	//TODO: free mapInfo.pointsArray
@@ -168,7 +172,7 @@ Point route(MapInfo mi, double position) {
 
 	RouteFunctionArgs arg = mi.rfag[periodId];
 	if (periodId >= mi.maxLimit)
-		return ret;//Exception!!!
+		return ret;//TODO:Exception!!!
 	//printf("route-functionx:%.2lf*pow(%.2lf,%.2lf)*sin(%.2lf*%.2lf+%.2lf)+%.2lf*%.2lf+%.2lf\n", arg.Rx, position, arg.Nx, arg.Ox, position, arg.Px, arg.Kx, position, arg.Bx);
 	//printf("route-functiony:%.2lf*pow(%.2lf,%.2lf)*sin(%.2lf*%.2lf+%.2lf)+%.2lf*%.2lf+%.2lf\n", arg.Ry, position, arg.Ny, arg.Oy, position, arg.Py, arg.Ky, position, arg.By);
 
@@ -180,12 +184,48 @@ Point route(MapInfo mi, double position) {
 	return ret;
 }
 
+
+inline Point speed(MapInfo mi, double position) {
+	Point ret;
+	if (mi.routeStoringMethod == STORE_BY_POINTS && position <= mi.maxLimit && position >= 1) {
+		ret.x = mi.pointsArray[(int)position].x - mi.pointsArray[(int)position - 1].x;
+		ret.y = mi.pointsArray[(int)position].y - mi.pointsArray[(int)position - 1].y;
+	}
+	else {
+
+		ret.x = -1;
+		ret.y = -1;
+		int periodId = 0;
+		if (position <= mi.rfag[0].minP){
+			ret.x = 1;
+			ret.y = 1;
+			return ret;
+		}
+
+		while (!(mi.rfag[periodId].minP <= position && position < mi.rfag[periodId].maxP) && periodId < mi.maxLimit)
+				periodId++;
+		RouteFunctionArgs arg = mi.rfag[periodId];
+		if (periodId >= mi.maxLimit)
+			return ret;//TODO:Exception!!!
+		ret.x = arg.Rx * pow(position, arg.Nx-1) *( arg.Nx * sin(arg.Ox * position + arg.Px) + arg.Ox * position * cos(arg.Ox * position + arg.Px))+ arg.Kx;
+		ret.y = arg.Ry * pow(position, arg.Ny-1) *( arg.Ny * sin(arg.Oy * position + arg.Py) + arg.Oy * position * cos(arg.Oy * position + arg.Py))+ arg.Ky;
+
+	}
+	return ret;
+}
+
+double speedValue(MapInfo mi, double position) {
+	Point v = speed(mi, position);
+	return sqrt(pow(v.x, 2) + pow(v.y, 2));
+}
+
 void coreGaming(MajorData md) {
 	md.gameEnd = false;
 	md.mi = loadingMapInfo(0, md.mapDir);
-	initBallList(&md.ballList, md.mi.ballCount, (unsigned int)time(0), md.mi.colorCount);
+	initBallList(&md.ballList, &md.mi, (unsigned int)time(0));
 	initZuma(md);
 	initFlyingBallArray(md.flyingBallArray,&md.mi);
+	initPainting();
 	//viewBallList(&md.ballList);
 	while (!md.gameEnd) {
 		operatingInput(md);//处理玩家操作
@@ -306,8 +346,9 @@ MapInfo loadingMapInfo(int method, char* dir) {
 
 
 
-void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount) {
+void initBallList(BallList* pbl, MapInfo* pmi, unsigned int seed) {
 	int errorCode;
+	double ballPostion = 0;
 	jmp_buf env;
 	const char exceptionHints[][40] = { "","excption when creating the first ball","excption when creating ball","unknow storing method" };
 	if ((errorCode = setjmp(env)) != 0) {//异常处理
@@ -317,22 +358,24 @@ void initBallList(BallList* pbl, int cnt, unsigned int seed, int colorCount) {
 	}
 
 	srand(seed);
-	pbl->firstBallPosition = 0;
+	//pbl->firstBallPosition = 0;
 	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
 	if (!p)
 		longjmp(env, 1);
 	pbl->firstBall = p;
-	pbl->firstBall->color = rand() % colorCount;
+	pbl->firstBall->color = rand() % pmi->colorCount;
 	pbl->firstBall->next = NULL;
 	pbl->firstBall->prev = NULL;
 
-	for (int i = 1; i < cnt; i++) {
+	for (int i = 1; i < pmi->ballCount; i++) {
+		p->position = ballPostion;
 		p->next = (BallOnList*)malloc(sizeof(BallOnList));
 		if (!p->next)
 			longjmp(env, 2);
 		p->next->prev = p;
-		p->next->color = rand() % colorCount;
+		p->next->color = rand() % pmi->colorCount;
 		p = p->next;
+		ballPostion -= pmi->ballR * 2 / speedValue(*pmi, ballPostion);
 	}
 	p->next = NULL;
 	return;
@@ -347,9 +390,10 @@ void insertBallList(BallList& bl,BallOnList* pbol_prev,BallOnList* pbol_next, Fl
 	p->color = fba.pfb[index].color;
 	p->prev = pbol_prev;
 	p->next = pbol_next;
-	printf("fbp=%lf,", bl.firstBallPosition);
-	bl.firstBallPosition += 0.5 * 40;//由于没有确定路径和长度关系，这里只能瞎搞了
-	printf("fbp=%lf\n", bl.firstBallPosition);
+	//printf("fbp=%lf,", bl.firstBallPosition);
+	//bl.firstBallPosition += 0.5 * 40;//由于没有确定路径和长度关系，这里只能瞎搞了
+	//TODO：重新设计路径模型（+微分+积分）
+	//printf("fbp=%lf\n", bl.firstBallPosition);
 	if (pbol_prev) {
 		pbol_prev->next = p;
 	}else {
@@ -377,21 +421,18 @@ void viewBallList(BallList* pbl) {
 }
 
 void paintBallList(BallList& bl, MapInfo* pmi) {
-	double thisBallPosition = bl.firstBallPosition;
 	BallOnList* p = bl.firstBall;
-	putimage(0, 0, pmi->imgs);
 	while (p) {
-		
 		//rotateAndPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, 0, route(*pmi, thisBallPosition));
-		justPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, route(*pmi, thisBallPosition));
+		justPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, route(*pmi, p->position));
 		//TODO:将列上球朝向改为路径一阶导
 		//printf("[DEBUG]thisBallPosition=%lf\n", thisBallPosition);
 		//Point point = route(*pmi, thisBallPosition);
 		//printf("[DEBUG]pointx=%lf, pointy=%lf\n", point.x,point.y);
 		//putimage(point.x, point.y, pmi->ballMaskImgs + p->color, SRCAND);
 		//putimage(point.x, point.y, pmi->ballImgs + p->color, SRCINVERT);
+		fillcircle(route(*pmi, p->position).x, route(*pmi, p->position).y, pmi->ballR);
 		p = p->next;
-		thisBallPosition -= pmi->ballR*2;
 	} 
 	return;
 }
@@ -471,23 +512,26 @@ void launchFlyingBall(FlyingBallArray& fba, int colorCount) {
 void paintFlyingBall(FlyingBallArray& fba,Zuma zuma, MapInfo* pmi) {//TODO:绘制镜像翻转的鱼（flyingball），使之眼睛朝上？
 	for (int i = 0; i < fba.size; i++) {
 		rotateAndPaint(pmi->ballImgs + fba.pfb[i].color, pmi->ballMaskImgs + fba.pfb[i].color, fba.pfb[i].angle, fba.pfb[i].position);
+		fillcircle(fba.pfb[i].position.x, fba.pfb[i].position.y, pmi->ballR);
+		//floodfill(fba.pfb[i].position.x, fba.pfb[i].position.y, WHITE);
 	}
 	return;
 }
 
 void testCrash(BallList& bl,FlyingBallArray& fba,int index,MapInfo* pmi) {
 	BallOnList* p = bl.firstBall;
-	double thisBallPosition = bl.firstBallPosition;
+	//double thisBallPosition = bl.firstBallPosition;
 	while (p) {
-		if (testPointDistance(route(*pmi, thisBallPosition), fba.pfb[index].position, pmi->ballR * 2)) {
-			if(compareDistance(fba.pfb[index].position,route(*pmi, thisBallPosition-1), route(*pmi, thisBallPosition+1)))
+		if (testPointDistance(route(*pmi, p->position), fba.pfb[index].position, pmi->ballR * 2)) {
+			if(compareDistance(fba.pfb[index].position,
+				route(*pmi, p->position-pmi->ballR*2), route(*pmi, p->position + pmi->ballR * 2)))
 				insertBallList(bl,p->prev, p, fba, index);
 			else
 				insertBallList(bl, p, p->next, fba, index);
 			break;
 		}
 		p = p->next;
-		thisBallPosition -= pmi->ballR * 2;
+		//thisBallPosition -= pmi->ballR * 2;
 	}
 }
 
@@ -496,7 +540,7 @@ inline bool testPointDistance(Point p1, Point p2,double minD) {
 }
 
 inline bool compareDistance(Point p, Point pTrue, Point pFalse) {
-	return pow((p.x - pTrue.x), 2) + pow((p.y - pTrue.y), 2) < pow((p.x - pFalse.x), 2) + pow((p.y - pFalse.y), 2);
+	return pow((p.x - pTrue.x), 2) + pow((p.y - pTrue.y), 2) > pow((p.x - pFalse.x), 2) + pow((p.y - pFalse.y), 2);
 }
 
 void operatingInput(MajorData& md) {
@@ -528,16 +572,23 @@ void computingFlyingBalls(FlyingBallArray& fba,Zuma zuma,BallList& bl,MapInfo* p
 }
 
 void computingBallList(BallList& bl, MapInfo* pmi) {
-	bl.firstBallPosition += pmi->moveSpeed;
+	//bl.firstBallPosition += pmi->moveSpeed;
+	BallOnList* p = bl.firstBall;
+	while (p) {
+		p->position += pmi->moveSpeed / speedValue(*pmi, p->position);
+		p = p->next;
+	}
 	return;
 }
 
 void paintImage(MajorData& md) {
 	BeginBatchDraw();//开始批量绘图
 	putimage(0, 0, &back);
+	//putimage(0, 0, md.mi.imgs);
 	paintBallList(md.ballList, &md.mi);
 	paintFlyingBall(md.flyingBallArray,md.zuma, &md.mi);
 	paintZuma(md.zuma,&md.mi);
+	FlushBatchDraw();
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
 
 	//仅供测试时使用
@@ -548,6 +599,10 @@ void paintImage(MajorData& md) {
 	return;
 }
 
+void initPainting() {
+	setfillstyle(BS_NULL);
+	return;
+}
 
 void operateMouseEvents(MajorData& md) {
 	MOUSEMSG mmsg;

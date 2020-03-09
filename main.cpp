@@ -19,8 +19,8 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
+//#define STORED 1
 
-typedef int ballColor;
 
 typedef struct _Point {
 	double x;
@@ -29,7 +29,7 @@ typedef struct _Point {
 
 typedef struct _BallOnList {
 	double position;
-	ballColor color;
+	int color;
 	struct _BallOnList* prev;
 	struct _BallOnList* next;
 }BallOnList;
@@ -75,6 +75,9 @@ typedef struct _MapInfo {
 	int maxLimit;//对于存点而言，是点的数目；对于存方程而言，是方程可取最大值
 	Point* pointsArray;
 	RouteFunctionArgs* rfag;//route function args group
+	Point* routePoints,* speedPoints;
+	double* speedValues;
+	double* speedArgles;
 }MapInfo;
 
 typedef struct _MajorData {
@@ -85,6 +88,9 @@ typedef struct _MajorData {
 	Zuma zuma;
 	FlyingBallArray flyingBallArray;
 }MajorData;
+
+int STORED;//for debug only
+
 
 void coreGaming(MajorData md);
 MapInfo loadingMapInfo(int method, char* dir);
@@ -107,8 +113,9 @@ void insertBallList(BallList& bl,BallOnList* pbol_prev, BallOnList* pbol_next, F
 void removeFlyingBall(FlyingBallArray& fba, int index);
 inline bool compareDistance(Point p, Point pTrue, Point pFalse);
 void initPainting();
-inline Point speed(MapInfo mi, double position);
+Point speed(MapInfo mi, double position);
 double speedValue(MapInfo mi, double position);
+void initStoredRoute(MapInfo* pmi);
 //TODO:free!!!
 //TODO:拆分函数！！
 //TODO:
@@ -124,12 +131,11 @@ int main() {
 	只能眼看着球列到达终点
 	*/
 	//TODO:增加地图读取控制系统
-	md.mapDir = "maps\\test_function-classic.zmap";
+	md.mapDir = "maps\\test_function.zmap";
 
 
 	//TODO: free mapInfo.pointsArray
 
-	initgraph(WIDTH, HEIGHT, SHOWCONSOLE);
 
 	//loadimage(&back, "image\\background.jpg");
 	//loadimage(&p1, "image\\fish02.jpg");
@@ -143,7 +149,8 @@ int main() {
 
 
 Point route(MapInfo mi, double position) {
-
+	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
+		return mi.routePoints[(int)position];
 	if (mi.routeStoringMethod == STORE_BY_POINTS && position <= mi.maxLimit) {//此处为点模式
 		printf("route:position=%.2lf,x=%.2lf,y=%.2lf\n", position, mi.pointsArray[(int)position].x, mi.pointsArray[(int)position].y);
 		return mi.pointsArray[(int)position];
@@ -180,7 +187,9 @@ Point route(MapInfo mi, double position) {
 }
 
 
-inline Point speed(MapInfo mi, double position) {
+Point speed(MapInfo mi, double position) {
+	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
+		return mi.speedPoints[(int)position];
 	Point ret;
 	if (mi.routeStoringMethod == STORE_BY_POINTS && position <= mi.maxLimit && position >= 1) {
 		ret.x = mi.pointsArray[(int)position].x - mi.pointsArray[(int)position - 1].x;
@@ -210,13 +219,33 @@ inline Point speed(MapInfo mi, double position) {
 }
 
 double speedValue(MapInfo mi, double position) {
+	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
+		return mi.speedValues[(int)position];
 	Point v = speed(mi, position);
 	return sqrt(pow(v.x, 2) + pow(v.y, 2));
 }
 
+double speedDirection(MapInfo mi, double position) {
+	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
+		return mi.speedArgles[(int)position];
+	Point v = speed(mi, position);
+	double tanOfAngle,ret;
+	if (v.x == 0)
+		v.x = 0.0001;
+	tanOfAngle = v.y / v.x;
+	ret = - atan(tanOfAngle);
+	if (v.x < 0)
+		ret += PI;
+	return ret;
+}
+
+
+
 void coreGaming(MajorData md) {
 	md.gameEnd = false;
+	STORED = 0;
 	md.mi = loadingMapInfo(0, md.mapDir);
+	STORED = 1;
 	initBallList(&md.ballList, &md.mi, (unsigned int)time(0));
 	initZuma(md);
 	initFlyingBallArray(md.flyingBallArray,&md.mi);
@@ -326,6 +355,7 @@ MapInfo loadingMapInfo(int method, char* dir) {
 				longjmp(env, 2);
 			mi.rfag[i] = arg;
 		}
+		initStoredRoute(&mi);
 
 	}
 	else {
@@ -339,6 +369,34 @@ MapInfo loadingMapInfo(int method, char* dir) {
 	return mi;
 }
 
+void initStoredRoute(MapInfo* pmi) {
+	printf("Starting storing route...\n");
+	int maxPosition = pmi->rfag[pmi->maxLimit - 1].maxP;
+	double tanOfAngle;
+	Point v;
+	pmi->routePoints = (Point*)malloc(sizeof(Point) * maxPosition);
+	pmi->speedPoints = (Point*)malloc(sizeof(Point) * maxPosition);
+	pmi->speedValues = (double*)malloc(sizeof(double) * maxPosition);
+	pmi->speedArgles = (double*)malloc(sizeof(double) * maxPosition);
+	if (!pmi->routePoints || !pmi->speedPoints || !pmi->speedValues || !pmi->speedArgles) {
+		printf("Exception when malloc");
+		return;
+	}
+	for (int i = 0; i < maxPosition; i++) {
+		pmi->routePoints[i] = route(*pmi, i);
+		v = speed(*pmi, i);
+		pmi->speedPoints[i] = v;
+		pmi->speedValues[i] = sqrt(pow(v.x, 2) + pow(v.y, 2));
+		if (v.x == 0)
+			v.x = 0.0001;
+		tanOfAngle = v.y / v.x;
+		pmi->speedArgles[i] = -atan(tanOfAngle);
+		if (v.x < 0)
+			pmi->speedArgles[i] += PI;
+	}
+	printf("Finished storing route.\n");
+	return;
+}
 
 
 void initBallList(BallList* pbl, MapInfo* pmi, unsigned int seed) {
@@ -462,8 +520,9 @@ void viewBallList(BallList* pbl) {
 void paintBallList(BallList& bl, MapInfo* pmi) {
 	BallOnList* p = bl.firstBall;
 	while (p) {
-		//rotateAndPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, 0, route(*pmi, thisBallPosition));
-		justPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, route(*pmi, p->position));
+	
+		rotateAndPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, speedDirection(*pmi,p->position), route(*pmi, p->position));
+		//justPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, route(*pmi, p->position));
 		//TODO:将列上球朝向改为路径一阶导
 		//printf("[DEBUG]thisBallPosition=%lf\n", thisBallPosition);
 		//Point point = route(*pmi, thisBallPosition);
@@ -638,6 +697,7 @@ void paintImage(MajorData& md) {
 }
 
 void initPainting() {
+	initgraph(WIDTH, HEIGHT, SHOWCONSOLE);
 	setfillstyle(BS_NULL);
 	return;
 }

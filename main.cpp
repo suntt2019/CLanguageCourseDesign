@@ -19,12 +19,6 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
-//TODO:删除临时测试用的全局变量
-IMAGE back;
-IMAGE p1;
-IMAGE p2;
-int i;
-
 
 typedef int ballColor;
 
@@ -109,7 +103,7 @@ void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position);
 inline bool isOutOfScreen(Point p);
 void justPaint(IMAGE* img, IMAGE* imgMask, Point position);
 inline bool testPointDistance(Point p1, Point p2, double minD);
-void insertBallList(BallList& bl,BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index);
+void insertBallList(BallList& bl,BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi);
 void removeFlyingBall(FlyingBallArray& fba, int index);
 inline bool compareDistance(Point p, Point pTrue, Point pFalse);
 void initPainting();
@@ -117,6 +111,7 @@ inline Point speed(MapInfo mi, double position);
 double speedValue(MapInfo mi, double position);
 //TODO:free!!!
 //TODO:拆分函数！！
+//TODO:
 
 int main() {
 	MajorData md;
@@ -136,10 +131,10 @@ int main() {
 
 	initgraph(WIDTH, HEIGHT, SHOWCONSOLE);
 
-	loadimage(&back, "image\\background.jpg");
-	loadimage(&p1, "image\\fish02.jpg");
-	loadimage(&p2, "image\\fish01.jpg");
-	i = 10;
+	//loadimage(&back, "image\\background.jpg");
+	//loadimage(&p1, "image\\fish02.jpg");
+	//loadimage(&p2, "image\\fish01.jpg");
+	//i = 10;
 
 	coreGaming(md);
 
@@ -377,12 +372,14 @@ void initBallList(BallList* pbl, MapInfo* pmi, unsigned int seed) {
 		p = p->next;
 		ballPostion -= pmi->ballR * 2 / speedValue(*pmi, ballPostion);
 	}
+	p->position = ballPostion;
 	p->next = NULL;
 	return;
 }
 
-void insertBallList(BallList& bl,BallOnList* pbol_prev,BallOnList* pbol_next, FlyingBallArray& fba,int index) {
+void insertBallList(BallList& bl,BallOnList* pbol_prev,BallOnList* pbol_next, FlyingBallArray& fba,int index,MapInfo* pmi) {
 	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
+	BallOnList* q;
 	if (!p){
 		printf("[Excption] initBallList: excption when creating ball.\n");
 		return;
@@ -390,20 +387,62 @@ void insertBallList(BallList& bl,BallOnList* pbol_prev,BallOnList* pbol_next, Fl
 	p->color = fba.pfb[index].color;
 	p->prev = pbol_prev;
 	p->next = pbol_next;
-	//printf("fbp=%lf,", bl.firstBallPosition);
-	//bl.firstBallPosition += 0.5 * 40;//由于没有确定路径和长度关系，这里只能瞎搞了
-	//TODO：重新设计路径模型（+微分+积分）
-	//printf("fbp=%lf\n", bl.firstBallPosition);
-	if (pbol_prev) {
+	//printf("%.4lf~between %.4lf and %.4lf\n", p->position,pbol_prev->position,pbol_next->position);
+
+	if (!pbol_prev) {
+		p->position = pbol_next->position + 2 * pmi->ballR / speedValue(*pmi, pbol_next->position);
+		bl.firstBall = p;
+		pbol_next->prev = p;
+	}else if (!pbol_next) {
+		p->position = pbol_prev->position - 2 * pmi->ballR / speedValue(*pmi, pbol_prev->position);
 		pbol_prev->next = p;
 	}else {
-		bl.firstBall = p;
-		bl.firstBallPosition += 0.5 * 40;
-	}
-	if(pbol_next)
+		p->position = (pbol_prev->position + pbol_next->position) / 2;
+		pbol_prev->next = p;
 		pbol_next->prev = p;
-	else 
-		bl.firstBallPosition -= 0.5 * 40;
+		q = pbol_prev;
+		while (q) {
+			q->position += pmi->ballR / speedValue(*pmi, q->position);
+			q = q->prev;
+		}
+		q = pbol_next;
+		while (q) {
+			q->position -= pmi->ballR / speedValue(*pmi, q->position);
+			q = q->next;
+		}
+	}
+
+
+
+
+
+
+	/*
+	if(!pbol_next)
+		p->position = pbol_prev->position - pmi->ballR / speedValue(*pmi, pbol_prev->position);
+	if (pbol_prev) {
+		pbol_prev->next = p;
+		q = pbol_prev;
+		while (q) {
+			q->position += pmi->ballR / speedValue(*pmi, q->position);
+			q = q->prev;
+		}
+	}else {
+		bl.firstBall = p;
+		p->position = pbol_next->position + pmi->ballR / speedValue(*pmi, pbol_next->position);
+	}
+	if (pbol_next) {
+		pbol_next->prev = p;
+		q = pbol_next;
+		while (q) {
+			q->position -= pmi->ballR / speedValue(*pmi, q->position);
+			q = q->next;
+		}
+	}
+	if(pbol_prev&& pbol_next)
+		p->position = (pbol_prev->position + pbol_next->position) / 2;
+	*/
+		
 	removeFlyingBall(fba, index);
 	return;
 }
@@ -525,9 +564,9 @@ void testCrash(BallList& bl,FlyingBallArray& fba,int index,MapInfo* pmi) {
 		if (testPointDistance(route(*pmi, p->position), fba.pfb[index].position, pmi->ballR * 2)) {
 			if(compareDistance(fba.pfb[index].position,
 				route(*pmi, p->position-pmi->ballR*2), route(*pmi, p->position + pmi->ballR * 2)))
-				insertBallList(bl,p->prev, p, fba, index);
+				insertBallList(bl,p->prev, p, fba, index,pmi);
 			else
-				insertBallList(bl, p, p->next, fba, index);
+				insertBallList(bl, p, p->next, fba, index,pmi);
 			break;
 		}
 		p = p->next;
@@ -583,8 +622,7 @@ void computingBallList(BallList& bl, MapInfo* pmi) {
 
 void paintImage(MajorData& md) {
 	BeginBatchDraw();//开始批量绘图
-	putimage(0, 0, &back);
-	//putimage(0, 0, md.mi.imgs);
+	putimage(0, 0, md.mi.imgs);
 	paintBallList(md.ballList, &md.mi);
 	paintFlyingBall(md.flyingBallArray,md.zuma, &md.mi);
 	paintZuma(md.zuma,&md.mi);

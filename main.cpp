@@ -5,6 +5,7 @@
 #include <setjmp.h>
 #include <math.h>
 #include <time.h>
+#include <winbase.h>
 
 #define PI 3.14159269
 
@@ -18,6 +19,9 @@
 #define UNKNOWN_STORING_METHOD -3
 
 #define FLYING_BALL_ARRAY_SIZE 100
+
+//#define double float
+
 
 //#define STORED 1
 
@@ -96,7 +100,7 @@ void coreGaming(MajorData md);
 MapInfo loadingMapInfo(int method, char* dir);
 void operatingInput(MajorData& md);
 void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma,BallList& bl, MapInfo* pmi);
-void computingBallList(BallList& bl, MapInfo* pmi);
+bool computingBallList(BallList& bl, MapInfo* pmi);
 void paintImage(MajorData& md);
 void initBallList(BallList* pbl, MapInfo* pmi, unsigned int seed);
 void viewBallList(BallList* pbl);
@@ -105,7 +109,7 @@ void paintZuma(Zuma zuma, MapInfo* pmi);
 void operateMouseEvents(MajorData& md);
 void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi);
 void generateFlyingBall(FlyingBallArray& fba, int colorCount);
-void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position);
+void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position,bool highQuality);
 inline bool isOutOfScreen(Point p);
 void justPaint(IMAGE* img, IMAGE* imgMask, Point position);
 inline bool testPointDistance(Point p1, Point p2, double minD);
@@ -113,14 +117,15 @@ void insertBallList(BallList& bl,BallOnList* pbol_prev, BallOnList* pbol_next, F
 void removeFlyingBall(FlyingBallArray& fba, int index);
 inline bool compareDistance(Point p, Point pTrue, Point pFalse);
 void initPainting();
-Point speed(MapInfo mi, double position);
-double speedValue(MapInfo mi, double position);
+Point speed(MapInfo* pmi, double position);
 void initStoredRoute(MapInfo* pmi);
+double getSpeedValue(MapInfo* pmi, double position);
+Point makePoint(double x, double y);
 //TODO:free!!!
 //TODO:拆分函数！！
-//TODO:
 
 int main() {
+	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	MajorData md;
 	printf("[DEBUG]MajorData:%dB,MapInfo:%dB\n", (int)sizeof(MajorData), (int)sizeof(MapInfo));
 	int zoomingMultiple = 1;//图像缩放比例，默认为1，可在设置中调节
@@ -131,49 +136,47 @@ int main() {
 	只能眼看着球列到达终点
 	*/
 	//TODO:增加地图读取控制系统
-	md.mapDir = "maps\\test_function.zmap";
+	md.mapDir = "maps\\test_function-classic.zmap";
 
 
 	//TODO: free mapInfo.pointsArray
 
-
-	//loadimage(&back, "image\\background.jpg");
-	//loadimage(&p1, "image\\fish02.jpg");
-	//loadimage(&p2, "image\\fish01.jpg");
-	//i = 10;
-
 	coreGaming(md);
+	TCHAR s[] = _T("GAME OVER");
+	outtextxy(10, 20, s);
+	_getch();
 
 	return 0;
 }
 
 
-Point route(MapInfo mi, double position) {
-	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
-		return mi.routePoints[(int)position];
-	if (mi.routeStoringMethod == STORE_BY_POINTS && position <= mi.maxLimit) {//此处为点模式
-		printf("route:position=%.2lf,x=%.2lf,y=%.2lf\n", position, mi.pointsArray[(int)position].x, mi.pointsArray[(int)position].y);
-		return mi.pointsArray[(int)position];
+Point route(MapInfo* pmi, double position) {
+	//printf("route(%.2lf)..",position);
+	//if (STORED&& pmi->rfag[0].minP < position && position < pmi->rfag[pmi->maxLimit-1].maxP)
+		//return pmi->routePoints[(int)position];
+	if (pmi->routeStoringMethod == STORE_BY_POINTS && position <= pmi->maxLimit) {//此处为点模式
+		printf("route:position=%.2lf,x=%.2lf,y=%.2lf\n", position, pmi->pointsArray[(int)position].x, pmi->pointsArray[(int)position].y);
+		return pmi->pointsArray[(int)position];//TODO:做出新的点模式
 	}
 
 	Point ret;
 	ret.x = -1;//-1表示读取失败
-	ret.y = -1;//很想用longjump，但是不然用全局变量....
+	ret.y = -1;//TODO:全局longjmp 
 	///TODO:考虑是否改成用longjump
 	//IMPORTANT：当前的方式有问题，-1是可能存在的情况，如果返回其他值，那边再处理会很难受...
 
 
-	if (mi.routeStoringMethod < 0)//此处为非法模式
+	if (pmi->routeStoringMethod < 0)//此处为非法模式
 		return ret;//Exception!!!
 
 	//此时为路径函数模式
 	int periodId = 0;
 
-	while (!(mi.rfag[periodId].minP <= position && position < mi.rfag[periodId].maxP) && periodId < mi.maxLimit)
+	while (!(pmi->rfag[periodId].minP <= position && position < pmi->rfag[periodId].maxP) && periodId < pmi->maxLimit)
 		periodId++;
 
-	RouteFunctionArgs arg = mi.rfag[periodId];
-	if (periodId >= mi.maxLimit)
+	RouteFunctionArgs arg = pmi->rfag[periodId];
+	if (periodId >= pmi->maxLimit)
 		return ret;//TODO:Exception!!!
 	//printf("route-functionx:%.2lf*pow(%.2lf,%.2lf)*sin(%.2lf*%.2lf+%.2lf)+%.2lf*%.2lf+%.2lf\n", arg.Rx, position, arg.Nx, arg.Ox, position, arg.Px, arg.Kx, position, arg.Bx);
 	//printf("route-functiony:%.2lf*pow(%.2lf,%.2lf)*sin(%.2lf*%.2lf+%.2lf)+%.2lf*%.2lf+%.2lf\n", arg.Ry, position, arg.Ny, arg.Oy, position, arg.Py, arg.Ky, position, arg.By);
@@ -187,29 +190,29 @@ Point route(MapInfo mi, double position) {
 }
 
 
-Point speed(MapInfo mi, double position) {
-	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
-		return mi.speedPoints[(int)position];
+Point speed(MapInfo* pmi, double position) {
+	if (STORED&& pmi->rfag[0].minP < position && position < pmi->rfag[pmi->maxLimit-1].maxP)
+		return pmi->speedPoints[(int)position];
 	Point ret;
-	if (mi.routeStoringMethod == STORE_BY_POINTS && position <= mi.maxLimit && position >= 1) {
-		ret.x = mi.pointsArray[(int)position].x - mi.pointsArray[(int)position - 1].x;
-		ret.y = mi.pointsArray[(int)position].y - mi.pointsArray[(int)position - 1].y;
+	if (pmi->routeStoringMethod == STORE_BY_POINTS && position <= pmi->maxLimit && position >= 1) {
+		ret.x = pmi->pointsArray[(int)position].x - pmi->pointsArray[(int)position - 1].x;
+		ret.y = pmi->pointsArray[(int)position].y - pmi->pointsArray[(int)position - 1].y;
 	}
 	else {
 
 		ret.x = -1;
 		ret.y = -1;
 		int periodId = 0;
-		if (position <= mi.rfag[0].minP){
+		if (position <= pmi->rfag[0].minP){
 			ret.x = 1;
 			ret.y = 1;
 			return ret;
 		}
 
-		while (!(mi.rfag[periodId].minP <= position && position < mi.rfag[periodId].maxP) && periodId < mi.maxLimit)
+		while (!(pmi->rfag[periodId].minP <= position && position < pmi->rfag[periodId].maxP) && periodId < pmi->maxLimit)
 				periodId++;
-		RouteFunctionArgs arg = mi.rfag[periodId];
-		if (periodId >= mi.maxLimit)
+		RouteFunctionArgs arg = pmi->rfag[periodId];
+		if (periodId >= pmi->maxLimit)
 			return ret;//TODO:Exception!!!
 		ret.x = arg.Rx * pow(position, arg.Nx-1) *( arg.Nx * sin(arg.Ox * position + arg.Px) + arg.Ox * position * cos(arg.Ox * position + arg.Px))+ arg.Kx;
 		ret.y = arg.Ry * pow(position, arg.Ny-1) *( arg.Ny * sin(arg.Oy * position + arg.Py) + arg.Oy * position * cos(arg.Oy * position + arg.Py))+ arg.Ky;
@@ -218,17 +221,26 @@ Point speed(MapInfo mi, double position) {
 	return ret;
 }
 
-double speedValue(MapInfo mi, double position) {
-	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
-		return mi.speedValues[(int)position];
-	Point v = speed(mi, position);
-	return sqrt(pow(v.x, 2) + pow(v.y, 2));
+double getSpeedValue(MapInfo* pmi, double position) {
+	//printf("getSpeedValue(pmi,%.2lf)=",position);
+	if (pmi->rfag[0].minP >= position) {
+		//printf("   1;\n");
+		return 1;
+	}
+	//printf("%.2lf\n", pmi->speedValues[(int)position]);
+	return pmi->speedValues[(int)position];
 }
-
-double speedDirection(MapInfo mi, double position) {
-	if (STORED&& mi.rfag[0].minP < position && position < mi.rfag[mi.maxLimit-1].maxP)
-		return mi.speedArgles[(int)position];
-	Point v = speed(mi, position);
+/*
+	if (STORED&& pmi->rfag[0].minP < position && position < pmi->rfag[pmi->maxLimit-1].maxP)
+		return pmi->speedValues[(int)position];
+	Point v = speed(pmi, position);
+	return sqrt(pow(v.x, 2) + pow(v.y, 2));
+	*/
+/*
+double speedDirection(MapInfo* pmi, double position) {
+	if (STORED&& pmi->rfag[0].minP < position && position < pmi->rfag[pmi->maxLimit-1].maxP)
+		return pmi->speedArgles[(int)position];
+	Point v = speed(pmi, position);
 	double tanOfAngle,ret;
 	if (v.x == 0)
 		v.x = 0.0001;
@@ -238,7 +250,7 @@ double speedDirection(MapInfo mi, double position) {
 		ret += PI;
 	return ret;
 }
-
+*/
 
 
 void coreGaming(MajorData md) {
@@ -254,7 +266,7 @@ void coreGaming(MajorData md) {
 	while (!md.gameEnd) {
 		operatingInput(md);//处理玩家操作
 		computingFlyingBalls(md.flyingBallArray,md.zuma,md.ballList,&md.mi);//计算飞出球
-		computingBallList(md.ballList,&md.mi);//计算列上球
+		md.gameEnd = computingBallList(md.ballList, &md.mi);//计算列上球
 		paintImage(md);//绘制图像
 		if (md.zuma.CDremain > 0)
 			md.zuma.CDremain--;
@@ -369,22 +381,30 @@ MapInfo loadingMapInfo(int method, char* dir) {
 	return mi;
 }
 
+Point makePoint(double x, double y) {
+	Point ret;
+	ret.x = x;
+	ret.y = y;
+	return ret;
+}
+
+
 void initStoredRoute(MapInfo* pmi) {
-	printf("Starting storing route...\n");
+	printf("Start precomputing...\n");
 	int maxPosition = pmi->rfag[pmi->maxLimit - 1].maxP;
 	double tanOfAngle;
 	Point v;
-	pmi->routePoints = (Point*)malloc(sizeof(Point) * maxPosition);
-	pmi->speedPoints = (Point*)malloc(sizeof(Point) * maxPosition);
-	pmi->speedValues = (double*)malloc(sizeof(double) * maxPosition);
-	pmi->speedArgles = (double*)malloc(sizeof(double) * maxPosition);
+	pmi->routePoints = (Point*)malloc(sizeof(Point) * (maxPosition + 10 + pmi->ballR * 2));
+	pmi->speedPoints = (Point*)malloc(sizeof(Point) * (maxPosition + 10 + pmi->ballR * 2));
+	pmi->speedValues = (double*)malloc(sizeof(double) * (maxPosition + 10 + pmi->ballR * 2));
+	pmi->speedArgles = (double*)malloc(sizeof(double) * (maxPosition + 10 + pmi->ballR * 2));
 	if (!pmi->routePoints || !pmi->speedPoints || !pmi->speedValues || !pmi->speedArgles) {
 		printf("Exception when malloc");
 		return;
 	}
 	for (int i = 0; i < maxPosition; i++) {
-		pmi->routePoints[i] = route(*pmi, i);
-		v = speed(*pmi, i);
+		pmi->routePoints[i] = route(pmi, i);
+		v = speed(pmi, i);
 		pmi->speedPoints[i] = v;
 		pmi->speedValues[i] = sqrt(pow(v.x, 2) + pow(v.y, 2));
 		if (v.x == 0)
@@ -393,8 +413,19 @@ void initStoredRoute(MapInfo* pmi) {
 		pmi->speedArgles[i] = -atan(tanOfAngle);
 		if (v.x < 0)
 			pmi->speedArgles[i] += PI;
+		printf("[Precomputing]position=%d,route=(%.2lf,%.2lf),speed=(%.2lf,%.2lf),speedValue=%.2lf,speedArgle=%.2lf\n",
+			i, pmi->routePoints[i].x, pmi->routePoints[i].y, pmi->speedPoints[i].x, pmi->speedPoints[i].y, pmi->speedValues[i], pmi->speedArgles[i]);
 	}
-	printf("Finished storing route.\n");
+	for (int i = maxPosition;i< maxPosition+10+pmi->ballR*2; i++) {//避免最后结尾的时候蹭出一点超出阈值的，下标越界
+		pmi->routePoints[i] = makePoint(-10-pmi->ballR*2, -10 - pmi->ballR * 2);
+		pmi->speedPoints[i] = makePoint(0.707,0.707);
+		pmi->speedValues[i] = 1;
+		pmi->speedArgles[i] = 0;
+		printf("[Precomputing]position=%d,route=(%.2lf,%.2lf),speed=(%.2lf,%.2lf),speedValue=%.2lf,speedArgle=%.2lf\n",
+			i, pmi->routePoints[i].x, pmi->routePoints[i].y, pmi->speedPoints[i].x, pmi->speedPoints[i].y, pmi->speedValues[i], pmi->speedArgles[i]);
+
+	}
+	printf("Precomputing ended.\n");
 	return;
 }
 
@@ -428,7 +459,7 @@ void initBallList(BallList* pbl, MapInfo* pmi, unsigned int seed) {
 		p->next->prev = p;
 		p->next->color = rand() % pmi->colorCount;
 		p = p->next;
-		ballPostion -= pmi->ballR * 2 / speedValue(*pmi, ballPostion);
+		ballPostion -= pmi->ballR * 2 / getSpeedValue(pmi, ballPostion);
 	}
 	p->position = ballPostion;
 	p->next = NULL;
@@ -448,26 +479,28 @@ void insertBallList(BallList& bl,BallOnList* pbol_prev,BallOnList* pbol_next, Fl
 	//printf("%.4lf~between %.4lf and %.4lf\n", p->position,pbol_prev->position,pbol_next->position);
 
 	if (!pbol_prev) {
-		p->position = pbol_next->position + 2 * pmi->ballR / speedValue(*pmi, pbol_next->position);
+		p->position = pbol_next->position + 2 * pmi->ballR / getSpeedValue(pmi, pbol_next->position);
 		bl.firstBall = p;
 		pbol_next->prev = p;
 	}else if (!pbol_next) {
-		p->position = pbol_prev->position - 2 * pmi->ballR / speedValue(*pmi, pbol_prev->position);
+		p->position = pbol_prev->position - 2 * pmi->ballR / getSpeedValue(pmi, pbol_prev->position);
 		pbol_prev->next = p;
 	}else {
-		p->position = (pbol_prev->position + pbol_next->position) / 2;
+		p->position = pbol_prev->position;
 		pbol_prev->next = p;
 		pbol_next->prev = p;
 		q = pbol_prev;
 		while (q) {
-			q->position += pmi->ballR / speedValue(*pmi, q->position);
+			q->position += 2 * pmi->ballR / getSpeedValue(pmi, q->position);
 			q = q->prev;
 		}
+		/*
 		q = pbol_next;
 		while (q) {
-			q->position -= pmi->ballR / speedValue(*pmi, q->position);
+			q->position -= pmi->ballR / getSpeedValue(pmi, q->position);
 			q = q->next;
 		}
+		*/
 	}
 
 
@@ -520,18 +553,15 @@ void viewBallList(BallList* pbl) {
 void paintBallList(BallList& bl, MapInfo* pmi) {
 	BallOnList* p = bl.firstBall;
 	while (p) {
-	
-		rotateAndPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, speedDirection(*pmi,p->position), route(*pmi, p->position));
-		//justPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, route(*pmi, p->position));
-		//TODO:将列上球朝向改为路径一阶导
-		//printf("[DEBUG]thisBallPosition=%lf\n", thisBallPosition);
-		//Point point = route(*pmi, thisBallPosition);
-		//printf("[DEBUG]pointx=%lf, pointy=%lf\n", point.x,point.y);
-		//putimage(point.x, point.y, pmi->ballMaskImgs + p->color, SRCAND);
-		//putimage(point.x, point.y, pmi->ballImgs + p->color, SRCINVERT);
-		fillcircle(route(*pmi, p->position).x, route(*pmi, p->position).y, pmi->ballR);
+		if (p->position < 0) {
+			p = p->next;
+			continue;
+		}
+		//justPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, pmi->routePoints[(int)p->position]);
+		rotateAndPaint(pmi->ballImgs + p->color, pmi->ballMaskImgs + p->color, pmi->speedArgles[(int)p->position], pmi->routePoints[(int)p->position],false);
+		fillcircle(pmi->routePoints[(int)p->position].x, pmi->routePoints[(int)p->position].y, pmi->ballR);
 		p = p->next;
-	} 
+	}
 	return;
 }
 
@@ -543,16 +573,16 @@ void initZuma(MajorData& md) {
 
 void paintZuma(Zuma zuma, MapInfo* pmi) {
 	//printf("paintZuma,x=%.2lf,y=%.2lf\n", zuma.position.x, zuma.position.y);
-	rotateAndPaint(pmi->imgs + 2, pmi->imgs + 3, zuma.angle + PI / 2, zuma.position);
+	rotateAndPaint(pmi->imgs + 2, pmi->imgs + 3, zuma.angle + PI / 2, zuma.position,true);
 
 	return;
 }
 
 
-void rotateAndPaint(IMAGE* img,IMAGE* imgMask,double angle,Point position) {
+void rotateAndPaint(IMAGE* img,IMAGE* imgMask,double angle,Point position,bool highQuality) {
 	IMAGE rotatedImg, rotatedImgMask;
-	rotateimage(&rotatedImg, img, angle, BLACK, true, true);
-	rotateimage(&rotatedImgMask, imgMask, angle, WHITE, true, true);
+	rotateimage(&rotatedImg, img, angle, BLACK, true, highQuality);
+	rotateimage(&rotatedImgMask, imgMask, angle, WHITE, true, highQuality);
 	double startingPositionX, startingPositionY;
 	startingPositionX = position.x - rotatedImg.getwidth() / 2;
 	startingPositionY = position.y - rotatedImg.getheight() / 2;
@@ -609,7 +639,7 @@ void launchFlyingBall(FlyingBallArray& fba, int colorCount) {
 
 void paintFlyingBall(FlyingBallArray& fba,Zuma zuma, MapInfo* pmi) {//TODO:绘制镜像翻转的鱼（flyingball），使之眼睛朝上？
 	for (int i = 0; i < fba.size; i++) {
-		rotateAndPaint(pmi->ballImgs + fba.pfb[i].color, pmi->ballMaskImgs + fba.pfb[i].color, fba.pfb[i].angle, fba.pfb[i].position);
+		rotateAndPaint(pmi->ballImgs + fba.pfb[i].color, pmi->ballMaskImgs + fba.pfb[i].color, fba.pfb[i].angle, fba.pfb[i].position,true);
 		fillcircle(fba.pfb[i].position.x, fba.pfb[i].position.y, pmi->ballR);
 		//floodfill(fba.pfb[i].position.x, fba.pfb[i].position.y, WHITE);
 	}
@@ -620,9 +650,9 @@ void testCrash(BallList& bl,FlyingBallArray& fba,int index,MapInfo* pmi) {
 	BallOnList* p = bl.firstBall;
 	//double thisBallPosition = bl.firstBallPosition;
 	while (p) {
-		if (testPointDistance(route(*pmi, p->position), fba.pfb[index].position, pmi->ballR * 2)) {
+		if (testPointDistance(pmi->routePoints[(int)p->position], fba.pfb[index].position, pmi->ballR * 2)) {
 			if(compareDistance(fba.pfb[index].position,
-				route(*pmi, p->position-pmi->ballR*2), route(*pmi, p->position + pmi->ballR * 2)))
+				(p->position > pmi->ballR * 2 ? pmi->routePoints[(int)(p->position-pmi->ballR*2)] : pmi->routePoints[0]), pmi->routePoints[(int)(p->position+pmi->ballR*2)]))
 				insertBallList(bl,p->prev, p, fba, index,pmi);
 			else
 				insertBallList(bl, p, p->next, fba, index,pmi);
@@ -669,14 +699,16 @@ void computingFlyingBalls(FlyingBallArray& fba,Zuma zuma,BallList& bl,MapInfo* p
 	return;
 }
 
-void computingBallList(BallList& bl, MapInfo* pmi) {
+bool computingBallList(BallList& bl, MapInfo* pmi) {
 	//bl.firstBallPosition += pmi->moveSpeed;
 	BallOnList* p = bl.firstBall;
+	if (p->position >= pmi->rfag[pmi->maxLimit - 1].maxP)
+		return true;
 	while (p) {
-		p->position += pmi->moveSpeed / speedValue(*pmi, p->position);
+		p->position += pmi->moveSpeed / getSpeedValue(pmi, p->position);
 		p = p->next;
 	}
-	return;
+	return false;
 }
 
 void paintImage(MajorData& md) {

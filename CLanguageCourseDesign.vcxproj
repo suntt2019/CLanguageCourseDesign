@@ -27,7 +27,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cJSON\cJSON.c" />
+    <ClCompile Include="coreGaming.cpp" />
+    <ClCompile Include="demo1.cpp" />
+    <ClCompile Include="loadMap.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="paint.cpp" />
+    <ClCompile Include="point.cpp" />
+    <ClCompile Include="zumaExceptions.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cJSON\cJSON.h" />
+    <ClInclude Include="zuma.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

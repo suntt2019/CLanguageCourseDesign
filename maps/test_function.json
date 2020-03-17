@@ -1,0 +1,45 @@
+{
+	"gameSettings": {
+		"ballCount": 10,
+		"ballR": 20,
+		"moveSpeed": 1,
+		"flySpeed": 10,
+		"shootingCD": 10
+	},
+	"mapInfo": {
+		"routeStoringMethod": "BY_FUNCTION",
+		"zuma": {
+			"zumaPosition": {
+				"x": 200,
+				"y": 300
+			},
+			"deltaMouthPosition": {
+				"x": 10,
+				"y": 20
+			},
+			"deltaHolePosition": {
+				"x": 10,
+				"y": 20
+			}
+		}
+	},
+	"resourceInfo": {
+		"backGround": "background.jpg",
+		"balls": {
+			"colorCount": 5,
+			"resource": [
+				{
+					"img": "fish_01.jpg",
+					"mask": "fish_mask_01.jpg"
+				},
+				{
+					"img": "fish_02.jpg",
+					"mask": "fish_mask_02.jpg"
+				}
+			]
+		}
+		
+	}
+
+}
+

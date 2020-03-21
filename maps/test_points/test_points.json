@@ -10,7 +10,7 @@
 	"mapPositionInfo": {
 		"routeStoringMethod": "STORE_BY_POINTS",
 		"routeInfo": {
-			"routeFileName": "route.zps",
+			"routeFileName": "route.zroute",
 			"pointCount": 100,
 			"pointStep": 1
 		},

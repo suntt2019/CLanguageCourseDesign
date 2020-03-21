@@ -3,12 +3,9 @@
 jmp_buf env;
 
 int main(){
-	//demo1();
 	MajorData md;
-	//md.mapDir = "maps\\test_function-classic.zmap";
-
-	loadMap(&md.mi, "maps","test_points");
-	//coreGaming(md);
+	loadMap(&md.mi, "maps","test_points");//TODO：地图选择界面动态决定选哪张图
+	coreGaming(md);
 	while (1);
 	return 0;
 }

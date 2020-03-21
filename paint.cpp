@@ -13,6 +13,7 @@ void paintImage(MajorData& md) {
 	//paintBallList(md.ballList, &md.mi);
 	//paintFlyingBall(md.flyingBallArray, md.zuma, &md.mi);
 	//paintZuma(md.zuma, &md.mi);
+	viewRoute(&md.mi.r);
 	FlushBatchDraw();
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
 
@@ -21,5 +22,12 @@ void paintImage(MajorData& md) {
 	//	md.ballList.firstBallPosition = 0;
 
 
+	return;
+}
+
+void viewRoute(Route* pr) {
+	for (int i = 0; i < pr->pointCount; i++) {
+		putpixel((pr->pointArray + i)->x, (pr->pointArray + i)->y, WHITE);
+	}
 	return;
 }

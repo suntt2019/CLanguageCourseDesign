@@ -5,16 +5,13 @@
 #define STRING_BUFFER_SIZE 1000
 
 void loadMap(MapInfo* pmi,char* folder,char* mapName) {
+	if (DEBUG_OUTPUT)
+		printf("\nStart loadMap(pmi=%p,folder=%s,mapName=%s)\n", pmi, folder, mapName);
 	char jsonString[JSON_MAX] = "";
 	char mapJsonLine[JSON_LINE_MAX] = { '\0' };
 	char dirBuffer[STRING_BUFFER_SIZE];
+	char dirBuffer2[STRING_BUFFER_SIZE];
 	char* isNEOF;//未到达文件尾部
-
-	pmi = (MapInfo*)malloc(sizeof(MapInfo));
-	if (!pmi)
-		longjmp(env, 0);//TODO:丰富异常系统的错误提示
-
-	printf("%p,%p\n", pmi, pmi->ri.background);
 
 	FILE* fp;
 	sprintf(dirBuffer, "%s\\%s\\%s.json",folder,mapName,mapName);
@@ -36,9 +33,12 @@ void loadMap(MapInfo* pmi,char* folder,char* mapName) {
 
 	const cJSON* json = cJSON_Parse(jsonString);
 	parseGameSettingsJson(pmi, json);
-	parseMapPositionInfoJson(pmi, json);
+	parseMapPositionInfoJson(pmi, json, dirBuffer);
 	parseResourceInfoJson(pmi, json, folder, mapName);
 	//TODO:cJSON_Delete很迷，会在下一次创建cJSON的时候用到之前free的指针，导致多次free的bug
+	
+	sprintf(dirBuffer2, "%s\\%s\\%s", folder, mapName, dirBuffer);
+	loadRouteFile(pmi,dirBuffer2);
 
 	return;
 }
@@ -64,7 +64,7 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 	//cJSON_Delete(gameSettingsJson);
 
 	if (DEBUG_OUTPUT) {
-		printf("parseGameSettingsJson():\n");
+		printf("\n[DEBUG_OUTPUT]parseGameSettingsJson():\n");
 		for (int i = 0; i < 3; i++)
 			printf("  Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
 		for (int i = 0; i < 3; i++)
@@ -74,7 +74,7 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 }
 
 
-void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json) {
+void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json,char* routeFileName) {
 	cJSON* mapPositionInfoJson = cJSON_GetObjectItemCaseSensitive(json, "mapPositionInfo");
 	cJSON* routeInfoJson = cJSON_GetObjectItemCaseSensitive(mapPositionInfoJson, "routeInfo");
 	cJSON* zumaJson = cJSON_GetObjectItemCaseSensitive(mapPositionInfoJson, "zuma");
@@ -86,18 +86,15 @@ void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json) {
 	for (int i = 0; i < 2; i++)
 		parseJsonInt(routeInfoJson, nameOfInts[i], pInts[i]);
 	
-	char routeFileName[STRING_BUFFER_SIZE];
 	parseJsonString(routeInfoJson, "routeFileName", routeFileName);
-	//TODO:loadRouteFile(routeFileName);
 
-	
 	Point* pPoints[] = { &pmi->mpi.zumaPosition,&pmi->mpi.deltaMouthPosition,&pmi->mpi.deltaHolePosition };
 	char* nameOfPoints[] = { "zumaPosition","deltaMouthPosition","deltaHolePosition" };
 	for (int i = 0; i < 3; i++)
 		parseJsonPoint(zumaJson, nameOfPoints[i], pPoints[i]);
 	
 	if (DEBUG_OUTPUT) {
-		printf("parseMapPositionInfoJson():\n");
+		printf("\n[DEBUG_OUTPUT]parseMapPositionInfoJson():\n");
 		for (int i = 0; i < 2; i++)
 			printf("  Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
 		for (int i = 0; i < 3; i++)
@@ -139,6 +136,13 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 	if (!ballsResourceJson)
 		longjmp(env, 3);
 
+	if (DEBUG_OUTPUT) {
+		printf("\n[DEBUG_OUTPUT]parseResourceInfoJson():\n");
+		printf("  loaded IMAGE(background)-size:%d*%d  (&=%p)\n",
+			pmi->ri.background->getwidth(), pmi->ri.background->getheight(), pmi->ri.background);
+		printf("  loaded colorCount:%d  (&=%p)\n", pmi->ri.colorCount,&pmi->ri.colorCount);
+	}
+
 	cJSON_ArrayForEach(ball, ballsResourceJson) {
 		parseJsonString(ball, "img", strBuffer);
 		sprintf(dirBuffer, "%s\\%s\\%s", folder, mapName, strBuffer);
@@ -146,9 +150,14 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 		parseJsonString(ball, "mask", strBuffer);
 		sprintf(dirBuffer, "%s\\%s\\%s", folder, mapName, strBuffer);
 		loadimage(pmi->ri.ballMaskImgs+i, dirBuffer);
+		if (DEBUG_OUTPUT) {
+			printf("  loaded IMAGE[%d](img)-size:%d*%d  (&=%p)\n",i,
+				(pmi->ri.ballImgs + i)->getwidth(), (pmi->ri.ballImgs + i)->getheight(),pmi->ri.ballImgs + i);
+			printf("  loaded IMAGE[%d](mask)-size:%d*%d  (&=%p)\n", i,
+				(pmi->ri.ballMaskImgs + i)->getwidth(), (pmi->ri.ballMaskImgs + i)->getheight(), pmi->ri.ballMaskImgs + i);
+		}
 		i++;
 	}
-	//TODO:DEBUG_OUTPUT
 	//TODO:解析img
 	//cJSON_Delete(resourceInfoJson);
 	return;
@@ -201,5 +210,24 @@ void parseJsonDouble(const cJSON* json, char* name, double* pDouble) {
 		longjmp(env, 3);
 	*pDouble = doubleJson->valuedouble;
 	//cJSON_Delete(doubleJson);
+	return;
+}
+
+void loadRouteFile(MapInfo* pmi,char* dir) {
+	FILE* fp = fopen(dir, "r");
+	if (!fp)
+		longjmp(env, 1);
+	pmi->r.pointArray = (Point*)malloc(sizeof(Point) * pmi->r.pointCount);
+	for (int i = 0; i < pmi->r.pointCount; i++)
+		if (fscanf(fp, "%lf %lf", &(pmi->r.pointArray + i)->x, &(pmi->r.pointArray + i)->y)!=2)
+			longjmp(env,2);
+	if (DEBUG_OUTPUT) {
+		printf("\nloadRouteFile():\n");
+		printf("  loaded %d points, first one : (%.2lf,%.2lf)  (&=%p)\n", 
+			pmi->r.pointCount, pmi->r.pointArray->x, pmi->r.pointArray->y, pmi->r.pointArray);
+		printf("                     last one : (%.2lf,%.2lf)  (&=%p)\n",
+			(pmi->r.pointArray + pmi->r.pointCount-1)->x, (pmi->r.pointArray + pmi->r.pointCount-1)->y,
+			pmi->r.pointArray + pmi->r.pointCount-1);
+	}
 	return;
 }

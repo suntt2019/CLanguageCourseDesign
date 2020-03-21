@@ -34,6 +34,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="paint.cpp" />
     <ClCompile Include="point.cpp" />
+    <ClCompile Include="test.cpp" />
     <ClCompile Include="zumaExceptions.cpp" />
   </ItemGroup>
   <ItemGroup>

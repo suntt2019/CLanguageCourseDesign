@@ -140,10 +140,19 @@ void loadMap(MapInfo* pmi, char* folder, char* mapName);
 void parseJsonInt(const cJSON* pjson, char* name, int* pInt);
 void parseJsonDouble(const cJSON* pjson, char* name, double* pDouble);
 void parseGameSettingsJson(MapInfo* pmi, const cJSON* json);
-void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json);
+void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* routeFileName);
 void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 void parseJsonString(const cJSON* json, char* name, char* str);
 void parseJsonPoint(const cJSON* json, char* name, Point* pPoint);
+void loadRouteFile(MapInfo* pmi, char* dir);
+void viewRoute(Route* pr);
+
+
+
+void test(MapInfo* pmi);
+
+
+
 
 extern jmp_buf env;
 

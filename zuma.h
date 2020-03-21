@@ -69,12 +69,12 @@ typedef struct _FlyingBallArray {
 }FlyingBallArray;
 
 typedef struct _GameSettings {
-	int ballCount, shootingCD, ballListCount;
+	int shootingCD;
 	double ballR, moveSpeed, flySpeed;
 }GameSettings;
 
 typedef struct _MapPositionInfo {
-	int routeStoringMethod;
+	int ballListCount;
 	Point zumaPosition, deltaMouthPosition, deltaHolePosition;
 }MapPositionInfo;
 
@@ -84,7 +84,7 @@ typedef struct _ResourceInfo {
 }ResourceInfo;
 
 typedef struct _Route {
-	int pointCount, pointStep;
+	int ballCount, pointCount, pointStep;
 	Point* pointArray;
 }Route;
 
@@ -92,14 +92,14 @@ typedef struct _MapInfo {
 	GameSettings gs;
 	MapPositionInfo mpi;
 	ResourceInfo ri;
-	Route r;
+	Route* pr;
 }MapInfo;
 
 typedef struct _MajorData {
 	bool gameEnd;
 	char* mapDir;
 	MapInfo mi;
-	BallList ballList;
+	BallList* pbl;
 	Zuma zuma;
 	FlyingBallArray flyingBallArray;
 }MajorData;
@@ -140,12 +140,14 @@ void loadMap(MapInfo* pmi, char* folder, char* mapName);
 void parseJsonInt(const cJSON* pjson, char* name, int* pInt);
 void parseJsonDouble(const cJSON* pjson, char* name, double* pDouble);
 void parseGameSettingsJson(MapInfo* pmi, const cJSON* json);
-void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* routeFileName);
+void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
+void parseBallListJson(Route* pr, const cJSON* json, char* folder, char* mapName);
 void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 void parseJsonString(const cJSON* json, char* name, char* str);
 void parseJsonPoint(const cJSON* json, char* name, Point* pPoint);
-void loadRouteFile(MapInfo* pmi, char* dir);
+void loadRouteFile(Route* pr, char* dir);
 void viewRoute(Route* pr);
+void operateException();
 
 
 

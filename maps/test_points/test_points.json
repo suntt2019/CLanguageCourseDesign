@@ -1,19 +1,32 @@
 {
 	"gameSettings": {
-		"ballCount": 3,
 		"shootingCD": 10,
-		"ballListCount": 1,
 		"ballR": 40,
 		"moveSpeed": 2,
 		"flySpeed": 15
 	},
 	"mapPositionInfo": {
-		"routeStoringMethod": "STORE_BY_POINTS",
-		"routeInfo": {
-			"routeFileName": "route.zroute",
-			"pointCount": 100,
-			"pointStep": 1
-		},
+		"ballListCount": 2,
+		"ballLists": [
+			{
+				"ballCount": 3,
+				"routeStoringMethod": "STORE_BY_POINTS",
+				"routeInfo": {
+					"routeFileName": "route.zroute",
+					"pointCount": 100,
+					"pointStep": 1
+				}
+			},
+			{
+				"ballCount": 5,
+				"routeStoringMethod": "STORE_BY_POINTS",
+				"routeInfo": {
+					"routeFileName": "route2.zroute",
+					"pointCount": 100,
+					"pointStep": 1
+				}
+			}
+		],
 		"zuma": {
 			"zumaPosition": {
 				"x": 600,

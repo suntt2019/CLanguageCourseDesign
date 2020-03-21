@@ -13,7 +13,8 @@ void paintImage(MajorData& md) {
 	//paintBallList(md.ballList, &md.mi);
 	//paintFlyingBall(md.flyingBallArray, md.zuma, &md.mi);
 	//paintZuma(md.zuma, &md.mi);
-	viewRoute(&md.mi.r);
+	for (int i = 0; i < md.mi.mpi.ballListCount; i++)
+		viewRoute(md.mi.pr+i);
 	FlushBatchDraw();
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
 

@@ -33,12 +33,11 @@ void loadMap(MapInfo* pmi,char* folder,char* mapName) {
 
 	const cJSON* json = cJSON_Parse(jsonString);
 	parseGameSettingsJson(pmi, json);
-	parseMapPositionInfoJson(pmi, json, dirBuffer);
+	parseMapPositionInfoJson(pmi, json, folder,mapName);
 	parseResourceInfoJson(pmi, json, folder, mapName);
 	//TODO:cJSON_Delete很迷，会在下一次创建cJSON的时候用到之前free的指针，导致多次free的bug
 	
-	sprintf(dirBuffer2, "%s\\%s\\%s", folder, mapName, dirBuffer);
-	loadRouteFile(pmi,dirBuffer2);
+	
 
 	return;
 }
@@ -49,9 +48,9 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 		longjmp(env, 3);
 
 
-	int* pInts[] = { &pmi->gs.ballCount,&pmi->gs.shootingCD,&pmi->gs.ballListCount };
-	char* nameOfInts[] = { "ballCount","shootingCD","ballListCount" };
-	for (int i = 0; i < 3; i++)
+	int* pInts[] = { &pmi->gs.shootingCD };
+	char* nameOfInts[] = { "shootingCD" };
+	for (int i = 0; i < 1; i++)
 		parseJsonInt(gameSettingsJson, nameOfInts[i], pInts[i]);
 
 
@@ -65,7 +64,7 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 
 	if (DEBUG_OUTPUT) {
 		printf("\n[DEBUG_OUTPUT]parseGameSettingsJson():\n");
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 1; i++)
 			printf("  Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
 		for (int i = 0; i < 3; i++)
 			printf("  Loaded double variable[%s]=%.2lf  (&=%p)\n", nameOfDoubles[i], *pDoubles[i], pDoubles[i]);
@@ -74,19 +73,24 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 }
 
 
-void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json,char* routeFileName) {
+void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName) {
 	cJSON* mapPositionInfoJson = cJSON_GetObjectItemCaseSensitive(json, "mapPositionInfo");
-	cJSON* routeInfoJson = cJSON_GetObjectItemCaseSensitive(mapPositionInfoJson, "routeInfo");
+	cJSON* ballListsJson = cJSON_GetObjectItemCaseSensitive(mapPositionInfoJson, "ballLists");
 	cJSON* zumaJson = cJSON_GetObjectItemCaseSensitive(mapPositionInfoJson, "zuma");
-	if (!mapPositionInfoJson || !routeInfoJson || !zumaJson)
+	if (!mapPositionInfoJson || !ballListsJson || !zumaJson)
 		longjmp(env, 3);
 
-	int* pInts[] = { &pmi->r.pointCount,&pmi->r.pointStep };
-	char* nameOfInts[] = { "pointCount","pointStep" };
-	for (int i = 0; i < 2; i++)
-		parseJsonInt(routeInfoJson, nameOfInts[i], pInts[i]);
-	
-	parseJsonString(routeInfoJson, "routeFileName", routeFileName);
+	parseJsonInt(mapPositionInfoJson, "ballListCount", &pmi->mpi.ballListCount);
+	pmi->pr = (Route*)malloc(sizeof(Route) * pmi->mpi.ballListCount);
+
+	cJSON* ballListJson;
+	int i = 0;
+	cJSON_ArrayForEach(ballListJson, ballListsJson) {
+		if (i > pmi->mpi.ballListCount - 1)
+			longjmp(env, 0);//TODO:增加新的exception-过多的BallList
+		parseBallListJson(pmi->pr + i, ballListJson, folder, mapName);
+		i++;
+	}
 
 	Point* pPoints[] = { &pmi->mpi.zumaPosition,&pmi->mpi.deltaMouthPosition,&pmi->mpi.deltaHolePosition };
 	char* nameOfPoints[] = { "zumaPosition","deltaMouthPosition","deltaHolePosition" };
@@ -95,8 +99,6 @@ void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json,char* routeFileNam
 	
 	if (DEBUG_OUTPUT) {
 		printf("\n[DEBUG_OUTPUT]parseMapPositionInfoJson():\n");
-		for (int i = 0; i < 2; i++)
-			printf("  Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
 		for (int i = 0; i < 3; i++)
 			printf("  Loaded double variable[%s]=(%.2lf,%.2lf)  (&=%p)\n",
 				nameOfPoints[i], pPoints[i]->x, pPoints[i]->y, pPoints[i]);
@@ -108,9 +110,40 @@ void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json,char* routeFileNam
 	return;
 }
 
+
+
+void parseBallListJson(Route* pr,const cJSON* json,char* folder,char* mapName) {
+
+	parseJsonInt(json, "ballCount", &pr->ballCount);
+	
+	//TODO:适配其他路径储存方式的文件
+	//计划是如果函数存储，在读取函数后，即刻将函数变为对应点
+
+	cJSON* routeInfoJson = cJSON_GetObjectItemCaseSensitive(json, "routeInfo");
+	int* pInts[] = { &pr->pointCount,&pr->pointStep };
+	char* nameOfInts[] = { "pointCount","pointStep" };
+	for (int i = 0; i < 2; i++)
+		parseJsonInt(routeInfoJson, nameOfInts[i], pInts[i]);
+	
+	if (DEBUG_OUTPUT) {
+		printf("  Loaded ballList:\n");
+		printf("    Loaded int variable[%s]=%d  (&=%p)\n", "ballCount", pr->ballCount ,&pr->ballCount);
+		for (int i = 0; i < 2; i++)
+			printf("    Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
+	}
+
+	char dirBuffer[STRING_BUFFER_SIZE];
+	char dirBuffer2[STRING_BUFFER_SIZE];
+	parseJsonString(routeInfoJson, "routeFileName", dirBuffer);
+	sprintf(dirBuffer2, "%s\\%s\\%s", folder, mapName, dirBuffer);
+	loadRouteFile(pr, dirBuffer2);
+
+	return;
+}
+
 void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName) {
 	cJSON* resourceInfoJson = cJSON_GetObjectItemCaseSensitive(json, "resourceInfo");
-	cJSON* ball = NULL;
+	cJSON* ballJson = NULL;
 	char strBuffer[STRING_BUFFER_SIZE];
 	char dirBuffer[STRING_BUFFER_SIZE];
 	pmi->ri.background = new IMAGE[1];
@@ -143,11 +176,11 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 		printf("  loaded colorCount:%d  (&=%p)\n", pmi->ri.colorCount,&pmi->ri.colorCount);
 	}
 
-	cJSON_ArrayForEach(ball, ballsResourceJson) {
-		parseJsonString(ball, "img", strBuffer);
+	cJSON_ArrayForEach(ballJson, ballsResourceJson) {
+		parseJsonString(ballJson, "img", strBuffer);
 		sprintf(dirBuffer, "%s\\%s\\%s", folder, mapName, strBuffer);
 		loadimage(pmi->ri.ballImgs+i, dirBuffer);
-		parseJsonString(ball, "mask", strBuffer);
+		parseJsonString(ballJson, "mask", strBuffer);
 		sprintf(dirBuffer, "%s\\%s\\%s", folder, mapName, strBuffer);
 		loadimage(pmi->ri.ballMaskImgs+i, dirBuffer);
 		if (DEBUG_OUTPUT) {
@@ -213,21 +246,23 @@ void parseJsonDouble(const cJSON* json, char* name, double* pDouble) {
 	return;
 }
 
-void loadRouteFile(MapInfo* pmi,char* dir) {
+void loadRouteFile(Route* pr,char* dir) {
 	FILE* fp = fopen(dir, "r");
 	if (!fp)
 		longjmp(env, 1);
-	pmi->r.pointArray = (Point*)malloc(sizeof(Point) * pmi->r.pointCount);
-	for (int i = 0; i < pmi->r.pointCount; i++)
-		if (fscanf(fp, "%lf %lf", &(pmi->r.pointArray + i)->x, &(pmi->r.pointArray + i)->y)!=2)
+	pr->pointArray = (Point*)malloc(sizeof(Point) * pr->pointCount);
+	if (!pr->pointArray)
+		longjmp(env, 5);
+	for (int i = 0; i < pr->pointCount; i++)
+		if (fscanf(fp, "%lf %lf", &(pr->pointArray + i)->x, &(pr->pointArray + i)->y)!=2)
 			longjmp(env,2);
 	if (DEBUG_OUTPUT) {
-		printf("\nloadRouteFile():\n");
-		printf("  loaded %d points, first one : (%.2lf,%.2lf)  (&=%p)\n", 
-			pmi->r.pointCount, pmi->r.pointArray->x, pmi->r.pointArray->y, pmi->r.pointArray);
-		printf("                     last one : (%.2lf,%.2lf)  (&=%p)\n",
-			(pmi->r.pointArray + pmi->r.pointCount-1)->x, (pmi->r.pointArray + pmi->r.pointCount-1)->y,
-			pmi->r.pointArray + pmi->r.pointCount-1);
+		printf("  loadRouteFile():\n");
+		printf("    loaded %d points, first one : (%.2lf,%.2lf)  (&=%p)\n", 
+			pr->pointCount, pr->pointArray->x, pr->pointArray->y, pr->pointArray);
+		printf("                       last one : (%.2lf,%.2lf)  (&=%p)\n",
+			(pr->pointArray + pr->pointCount-1)->x, (pr->pointArray + pr->pointCount-1)->y,
+			pr->pointArray + pr->pointCount-1);
 	}
 	return;
 }

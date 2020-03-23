@@ -8,7 +8,9 @@ void operateException() {
 		"json parsing exception",
 		"unknow storing method",
 		"malloc exception",//5
-	
+		"TODO:Fix this situation",
+		"Points Index Out of Bounds",
+
 	
 	
 	

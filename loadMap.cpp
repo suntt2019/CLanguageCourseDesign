@@ -54,9 +54,9 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 		parseJsonInt(gameSettingsJson, nameOfInts[i], pInts[i]);
 
 
-	double* pDoubles[] = { &pmi->gs.ballR,&pmi->gs.moveSpeed,&pmi->gs.flySpeed };
-	char* nameOfDoubles[] = { "ballR","moveSpeed","flySpeed" };
-	for (int i = 0; i < 3; i++)
+	double* pDoubles[] = { &pmi->gs.ballR,&pmi->gs.moveSpeed,&pmi->gs.flySpeed,&pmi->gs.beginningRushSpeed };
+	char* nameOfDoubles[] = { "ballR","moveSpeed","flySpeed","beginningRushSpeed" };
+	for (int i = 0; i < 4; i++)
 		parseJsonDouble(gameSettingsJson, nameOfDoubles[i], pDoubles[i]);
 	
 	
@@ -66,7 +66,7 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 		printf("\n[DEBUG_OUTPUT]parseGameSettingsJson():\n");
 		for (int i = 0; i < 1; i++)
 			printf("  Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 4; i++)
 			printf("  Loaded double variable[%s]=%.2lf  (&=%p)\n", nameOfDoubles[i], *pDoubles[i], pDoubles[i]);
 	}
 	return;
@@ -100,7 +100,7 @@ void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, cha
 	if (DEBUG_OUTPUT) {
 		printf("\n[DEBUG_OUTPUT]parseMapPositionInfoJson():\n");
 		for (int i = 0; i < 3; i++)
-			printf("  Loaded double variable[%s]=(%.2lf,%.2lf)  (&=%p)\n",
+			printf("  Loaded Point variable[%s]=(%.2lf,%.2lf)  (&=%p)\n",
 				nameOfPoints[i], pPoints[i]->x, pPoints[i]->y, pPoints[i]);
 	}
 	
@@ -116,6 +116,11 @@ void parseBallListJson(Route* pr,const cJSON* json,char* folder,char* mapName) {
 
 	parseJsonInt(json, "ballCount", &pr->ballCount);
 	
+	double* pDoubles[] = { &pr->beginningRushRound };
+	char* nameOfDoubles[] = { "beginningRushRound" };
+	for (int i = 0; i < 1; i++)
+		parseJsonDouble(json, nameOfDoubles[i], pDoubles[i]);
+
 	//TODO:适配其他路径储存方式的文件
 	//计划是如果函数存储，在读取函数后，即刻将函数变为对应点
 
@@ -125,11 +130,16 @@ void parseBallListJson(Route* pr,const cJSON* json,char* folder,char* mapName) {
 	for (int i = 0; i < 2; i++)
 		parseJsonInt(routeInfoJson, nameOfInts[i], pInts[i]);
 	
+
+
+
 	if (DEBUG_OUTPUT) {
 		printf("  Loaded ballList:\n");
 		printf("    Loaded int variable[%s]=%d  (&=%p)\n", "ballCount", pr->ballCount ,&pr->ballCount);
 		for (int i = 0; i < 2; i++)
 			printf("    Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
+		for (int i = 0; i < 1; i++)
+			printf("    Loaded double variable[%s]=%.2lf  (&=%p)\n", nameOfDoubles[i], *pDoubles[i], pDoubles[i]);
 	}
 
 	char dirBuffer[STRING_BUFFER_SIZE];

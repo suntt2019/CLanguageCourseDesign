@@ -22,7 +22,7 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
-#define DEBUG_OUTPUT 1
+#define DEBUG_OUTPUT 2
 
 
 typedef struct _Point {
@@ -30,18 +30,7 @@ typedef struct _Point {
 	double y;
 }Point;
 
-typedef struct _BallOnList {
-	double position;
-	int color;
-	struct _BallOnList* prev;
-	struct _BallOnList* next;
-}BallOnList;
 
-
-typedef struct _BallList {
-	double firstBallPosition;
-	BallOnList* firstBall;
-}BallList;
 
 typedef struct _RouteFunctionArgs {
 	double minP, maxP;
@@ -70,7 +59,7 @@ typedef struct _FlyingBallArray {
 
 typedef struct _GameSettings {
 	int shootingCD;
-	double ballR, moveSpeed, flySpeed;
+	double ballR, moveSpeed, flySpeed, beginningRushSpeed;
 }GameSettings;
 
 typedef struct _MapPositionInfo {
@@ -85,8 +74,23 @@ typedef struct _ResourceInfo {
 
 typedef struct _Route {
 	int ballCount, pointCount, pointStep;
+	double beginningRushRound;
 	Point* pointArray;
 }Route;
+
+typedef struct _BallOnList {
+	double position, force;
+	int color;
+	struct _BallOnList* prev;
+	struct _BallOnList* next;
+}BallOnList;
+
+
+typedef struct _BallList {
+	BallOnList* tail;
+	Route* pr;
+	int beginningRushRoundRemain;
+}BallList;
 
 typedef struct _MapInfo {
 	GameSettings gs;
@@ -114,7 +118,7 @@ void operatingInput(MajorData& md);
 void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi);
 bool computingBallList(BallList& bl, MapInfo* pmi);
 void paintImage(MajorData& md);
-void initBallList(BallList* pbl, MapInfo* pmi, unsigned int seed);
+void initBallList(BallList* pbl, Route* pr, MapInfo* pmi, unsigned int seed);
 void viewBallList(BallList* pbl);
 void initZuma(MajorData& md);
 void paintZuma(Zuma zuma, MapInfo* pmi);
@@ -148,6 +152,15 @@ void parseJsonPoint(const cJSON* json, char* name, Point* pPoint);
 void loadRouteFile(Route* pr, char* dir);
 void viewRoute(Route* pr);
 void operateException();
+void initAllBallList(BallList** ppbl, MapInfo* pmi);
+void computeBallList(BallList* pbl, MapInfo* pmi);
+void computeBeginningRush(BallList* pbl, MapInfo* pmi);
+void computeNormalPush(BallList* pbl, MapInfo* pmi);
+void applyForceToPosition(BallList* pbl, MapInfo* pmi);
+void computeAllBallList(BallList* pbl, MapInfo* pmi);
+Point route(Route* pr, int index);
+void paintViewBallList(BallList* pbl, MapInfo* pmi);
+void paintViewAllBallList(BallList* pbl, MapInfo* pmi);
 
 
 

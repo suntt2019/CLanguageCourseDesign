@@ -3,7 +3,8 @@
 void coreGaming(MajorData md) {
 	md.gameEnd = false;
 	//md.mi = loadingMapInfo(md.mapDir);
-	//initBallList(&md.ballList, &md.mi, (unsigned int)time(0));
+	
+	initAllBallList(&md.pbl, &md.mi);
 	//initZuma(md);
 	//initFlyingBallArray(md.flyingBallArray, &md.mi);
 	initPainting();
@@ -12,6 +13,7 @@ void coreGaming(MajorData md) {
 		//operatingInput(md);//处理玩家操作
 		//computingFlyingBalls(md.flyingBallArray, md.zuma, md.ballList, &md.mi);//计算飞出球
 		//md.gameEnd = computingBallList(md.ballList, &md.mi);//计算列上球
+		computeAllBallList(md.pbl, &md.mi);
 		paintImage(md);//绘制图像
 		/*
 		if (md.zuma.CDremain > 0)

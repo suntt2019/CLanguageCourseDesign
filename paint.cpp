@@ -15,6 +15,7 @@ void paintImage(MajorData& md) {
 	//paintZuma(md.zuma, &md.mi);
 	for (int i = 0; i < md.mi.mpi.ballListCount; i++)
 		viewRoute(md.mi.pr+i);
+	paintViewAllBallList(md.pbl, &md.mi);
 	FlushBatchDraw();
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
 
@@ -29,6 +30,24 @@ void paintImage(MajorData& md) {
 void viewRoute(Route* pr) {
 	for (int i = 0; i < pr->pointCount; i++) {
 		putpixel((pr->pointArray + i)->x, (pr->pointArray + i)->y, WHITE);
+	}
+	return;
+}
+
+
+void paintViewAllBallList(BallList* pbl, MapInfo* pmi) {
+	for (int i = 0; i < pmi->mpi.ballListCount; i++)
+		paintViewBallList(pbl+i, pmi);
+	return;
+}
+
+void paintViewBallList(BallList* pbl,MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	Point point;
+	while (p) {
+		point = route(pbl->pr, (int)p->position);
+		fillcircle(point.x,point.y, pmi->gs.ballR);
+		p = p->prev;
 	}
 	return;
 }

@@ -3,13 +3,15 @@
 		"shootingCD": 10,
 		"ballR": 40,
 		"moveSpeed": 2,
-		"flySpeed": 15
+		"flySpeed": 15,
+		"beginningRushSpeed": 4
 	},
 	"mapPositionInfo": {
 		"ballListCount": 2,
 		"ballLists": [
 			{
 				"ballCount": 3,
+				"beginningRushRound": 20,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route.zroute",
@@ -19,6 +21,7 @@
 			},
 			{
 				"ballCount": 5,
+				"beginningRushRound": 20,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route2.zroute",

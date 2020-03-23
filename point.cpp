@@ -13,3 +13,12 @@ bool isOutOfScreen(Point p) {
 	return !(0 <= p.x && p.x <= WIDTH && 0 <= p.y && p.y <= HEIGHT);
 }
 //TODO：更新WIDTH和HEIGHT为动态窗口大小
+
+
+bool testPointDistance(Point p1, Point p2, double minD) {
+	return pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2) < pow(minD, 2);
+}
+
+bool compareDistance(Point p, Point pTrue, Point pFalse) {
+	return pow((p.x - pTrue.x), 2) + pow((p.y - pTrue.y), 2) > pow((p.x - pFalse.x), 2) + pow((p.y - pFalse.y), 2);
+}

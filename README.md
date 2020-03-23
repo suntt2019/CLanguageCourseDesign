@@ -3,6 +3,12 @@
 ## TODO LIST
 (暂时置顶，等游戏基本上完成后放到后面)
 
+### 实现多BallList与新地图存储方式下的v1.0功能
+* ballList.cpp:117 TODO:add insertBallList(with Animation...)
+* ballList.cpp:155 TODO：适配testCrash
+* paint.cpp:38 TODO:完成paintBallList(和paintAllBallList)
+
+
 ### 核心游戏部分
 * 路径
   * 存储
@@ -24,6 +30,7 @@
 * 祖玛
   * 右键交换两球
   * 只会生成`在场颜色`的球
+  * 增加射球CD的动画
 * 图像
   * 增加前景功能（保证性能足够的前提下）
 * 音频
@@ -53,7 +60,7 @@
 
 ### 程序设计
 * 拆分长的函数，整理函数
-* **改进longjmp为全局异常处理  √** 
+* 改进异常处理为函数调用（longjmp不能跨文件） 
 * free & delete
  
 

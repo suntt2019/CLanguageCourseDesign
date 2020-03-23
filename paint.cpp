@@ -35,6 +35,21 @@ void viewRoute(Route* pr) {
 }
 
 
+//TODO:完成paintBallList(和paintAllBallList)
+//需要求角度
+/*
+void paintBallList(BallList* pbl, MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	Point point;
+	while (p) {
+		point = route(pbl->pr, (int)p->position);
+		fillcircle(point.x, point.y, pmi->gs.ballR);
+		p = p->prev;
+	}
+	return;
+}
+*/
+
 void paintViewAllBallList(BallList* pbl, MapInfo* pmi) {
 	for (int i = 0; i < pmi->mpi.ballListCount; i++)
 		paintViewBallList(pbl+i, pmi);
@@ -67,3 +82,5 @@ void paintFlyingBall(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi) {//TODO:绘制
 	}
 	return;
 }
+
+

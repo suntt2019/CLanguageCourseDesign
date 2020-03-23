@@ -114,3 +114,60 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 }
 
 
+//TODO:add insertBallList(with Animation...)
+/*
+void insertBallList(BallList& bl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi) {
+	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
+	BallOnList* q;
+	if (!p) {
+		printf("[Excption] initBallList: excption when creating ball.\n");
+		return;
+	}
+	p->color = fba.pfb[index].color;
+	p->prev = pbol_prev;
+	p->next = pbol_next;
+	//printf("%.4lf~between %.4lf and %.4lf\n", p->position,pbol_prev->position,pbol_next->position);
+
+	if (!pbol_prev) {
+		p->position = pbol_next->position + 2 * pmi->ballR / getSpeedValue(pmi, pbol_next->position);
+		bl.firstBall = p;
+		pbol_next->prev = p;
+	}
+	else if (!pbol_next) {
+		p->position = pbol_prev->position - 2 * pmi->ballR / getSpeedValue(pmi, pbol_prev->position);
+		pbol_prev->next = p;
+	}
+	else {
+		p->position = pbol_prev->position;
+		pbol_prev->next = p;
+		pbol_next->prev = p;
+		q = pbol_prev;
+		while (q) {
+			q->position += 2 * pmi->ballR / getSpeedValue(pmi, q->position);
+			q = q->prev;
+		}
+	}
+	removeFlyingBall(fba, index);
+	return;
+}
+*/
+
+//TODO£ºÊÊÅätestCrash
+/*
+void testCrash(BallList& bl, FlyingBallArray& fba, int index, MapInfo* pmi) {
+	BallOnList* p = bl.firstBall;
+	//double thisBallPosition = bl.firstBallPosition;
+	while (p) {
+		if (testPointDistance(pmi->routePoints[(int)p->position], fba.pfb[index].position, pmi->ballR * 2)) {
+			if (compareDistance(fba.pfb[index].position,
+				(p->position > pmi->ballR * 2 ? pmi->routePoints[(int)(p->position - pmi->ballR * 2)] : pmi->routePoints[0]), pmi->routePoints[(int)(p->position + pmi->ballR * 2)]))
+				insertBallList(bl, p->prev, p, fba, index, pmi);
+			else
+				insertBallList(bl, p, p->next, fba, index, pmi);
+			break;
+		}
+		p = p->next;
+		//thisBallPosition -= pmi->ballR * 2;
+	}
+}
+*/

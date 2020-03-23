@@ -69,7 +69,7 @@ typedef struct _MapPositionInfo {
 
 typedef struct _ResourceInfo {
 	int colorCount, imgCount;
-	IMAGE* background, * imgs, * ballImgs, * ballMaskImgs;
+	IMAGE* background, *zuma, *zumaMask, * imgs, * ballImgs, * ballMaskImgs;
 }ResourceInfo;
 
 typedef struct _Route {
@@ -113,20 +113,19 @@ typedef struct _MajorData {
 void demo1();
 
 void coreGaming(MajorData md);
-MapInfo loadingMapInfo(char* dir);
-void operatingInput(MajorData& md);
+void operatingInput(MajorData* pmd);
 void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi);
 bool computingBallList(BallList& bl, MapInfo* pmi);
-void paintImage(MajorData& md);
+void paintImage(MajorData* pmd);
 void initBallList(BallList* pbl, Route* pr, MapInfo* pmi, unsigned int seed);
 void viewBallList(BallList* pbl);
-void initZuma(MajorData& md);
+void initZuma(MajorData* pmd);
 void paintZuma(Zuma zuma, MapInfo* pmi);
-void operateMouseEvents(MajorData& md);
+void operateMouseEvents(MajorData* pmd);
 void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi);
 void generateFlyingBall(FlyingBallArray& fba, int colorCount);
 void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position, bool highQuality);
-inline bool isOutOfScreen(Point p);
+bool isOutOfScreen(Point p);
 void justPaint(IMAGE* img, IMAGE* imgMask, Point position);
 inline bool testPointDistance(Point p1, Point p2, double minD);
 void insertBallList(BallList& bl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi);
@@ -161,7 +160,8 @@ void computeAllBallList(BallList* pbl, MapInfo* pmi);
 Point route(Route* pr, int index);
 void paintViewBallList(BallList* pbl, MapInfo* pmi);
 void paintViewAllBallList(BallList* pbl, MapInfo* pmi);
-
+void computeZuma(Zuma* pzuma);
+void launchFlyingBall(FlyingBallArray& fba, int colorCount);
 
 
 void test(MapInfo* pmi);

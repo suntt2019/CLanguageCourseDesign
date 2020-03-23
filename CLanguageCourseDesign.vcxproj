@@ -28,15 +28,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ballList.cpp" />
+    <ClCompile Include="basicPaint.cpp" />
     <ClCompile Include="cJSON\cJSON.c" />
     <ClCompile Include="coreGaming.cpp" />
+    <ClCompile Include="coreGamingInput.cpp" />
     <ClCompile Include="demo1.cpp" />
+    <ClCompile Include="flyingBall.cpp" />
     <ClCompile Include="loadMap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="paint.cpp" />
     <ClCompile Include="point.cpp" />
     <ClCompile Include="route.cpp" />
     <ClCompile Include="test.cpp" />
+    <ClCompile Include="zuma.cpp" />
     <ClCompile Include="zumaExceptions.cpp" />
   </ItemGroup>
   <ItemGroup>

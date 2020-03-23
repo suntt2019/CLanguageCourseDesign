@@ -47,6 +47,8 @@
 	},
 	"resourceInfo": {
 		"backGround": "background.jpg",
+		"zuma": "zuma.jpg",
+		"zumaMask": "zuma_mask.jpg",
 		"balls": {
 			"colorCount": 5,
 			"resource": [

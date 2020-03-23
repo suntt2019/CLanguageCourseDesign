@@ -156,16 +156,19 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 	cJSON* ballJson = NULL;
 	char strBuffer[STRING_BUFFER_SIZE];
 	char dirBuffer[STRING_BUFFER_SIZE];
-	pmi->ri.background = new IMAGE[1];
-	if (!pmi->ri.background)
-		longjmp(env, 0);
 
-	parseJsonString(resourceInfoJson, "backGround",strBuffer);
+	IMAGE** pimgs[] = { &pmi->ri.background , &pmi->ri.zuma , &pmi->ri.zumaMask };
+	char* nameOfImgs[] = { "backGround" , "zuma" , "zumaMask" };
+	for (int i = 0; i < 3; i++) {
+		*pimgs[i] = new IMAGE[1];
+		if (!*pimgs[i])
+			longjmp(env, 5);
+		parseJsonString(resourceInfoJson, nameOfImgs[i], strBuffer);
+		sprintf(dirBuffer, "%s\\%s\\%s", folder, mapName, strBuffer);
+		loadimage(*pimgs[i], dirBuffer);
+	}
 
-
-	sprintf(dirBuffer,"%s\\%s\\%s", folder, mapName,strBuffer);
-
-	loadimage(pmi->ri.background, dirBuffer);
+	
 
 	cJSON* ballsJson = cJSON_GetObjectItemCaseSensitive(resourceInfoJson, "balls");
 	if (!ballsJson)
@@ -181,8 +184,9 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 
 	if (DEBUG_OUTPUT) {
 		printf("\n[DEBUG_OUTPUT]parseResourceInfoJson():\n");
-		printf("  loaded IMAGE(background)-size:%d*%d  (&=%p)\n",
-			pmi->ri.background->getwidth(), pmi->ri.background->getheight(), pmi->ri.background);
+		for(int i=0;i<3;i++)
+			printf("  loaded IMAGE(%s)-size:%d*%d  (&=%p)\n",
+				nameOfImgs[i],(**pimgs[i]).getwidth(), (**pimgs[i]).getheight(), *pimgs[i]);
 		printf("  loaded colorCount:%d  (&=%p)\n", pmi->ri.colorCount,&pmi->ri.colorCount);
 	}
 

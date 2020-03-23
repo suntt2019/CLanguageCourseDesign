@@ -1,6 +1,6 @@
 #include "zuma.h"
 
-void operateException() {
+void operateException() {//TODO:换为函数调用（才发现longjmp不能跨文件）
 	int errorCode = 0;
 	const char exceptionHints[][30] = { "",
 		"json file not found",

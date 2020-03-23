@@ -7,21 +7,21 @@ void initPainting() {
 }
 
 
-void paintImage(MajorData& md) {
+void paintImage(MajorData* pmd) {
 	BeginBatchDraw();//开始批量绘图
-	putimage(0, 0, md.mi.ri.background);
-	//paintBallList(md.ballList, &md.mi);
-	//paintFlyingBall(md.flyingBallArray, md.zuma, &md.mi);
-	//paintZuma(md.zuma, &md.mi);
-	for (int i = 0; i < md.mi.mpi.ballListCount; i++)
-		viewRoute(md.mi.pr+i);
-	paintViewAllBallList(md.pbl, &md.mi);
+	putimage(0, 0, pmd->mi.ri.background);
+	//paintBallList(pmd->ballList, &pmd->mi);
+	paintFlyingBall(pmd->flyingBallArray, pmd->zuma, &pmd->mi);
+	paintZuma(pmd->zuma, &pmd->mi);
+	for (int i = 0; i < pmd->mi.mpi.ballListCount; i++)
+		viewRoute(pmd->mi.pr+i);
+	paintViewAllBallList(pmd->pbl, &pmd->mi);
 	FlushBatchDraw();
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
 
 	//仅供测试时使用
-	//if (md.ballList.firstBallPosition > 400)
-	//	md.ballList.firstBallPosition = 0;
+	//if (pmd->ballList.firstBallPosition > 400)
+	//	pmd->ballList.firstBallPosition = 0;
 
 
 	return;
@@ -48,6 +48,22 @@ void paintViewBallList(BallList* pbl,MapInfo* pmi) {
 		point = route(pbl->pr, (int)p->position);
 		fillcircle(point.x,point.y, pmi->gs.ballR);
 		p = p->prev;
+	}
+	return;
+}
+
+void paintZuma(Zuma zuma, MapInfo* pmi) {
+	//printf("paintZuma,x=%.2lf,y=%.2lf\n", zuma.position.x, zuma.position.y);
+	rotateAndPaint(pmi->ri.zuma, pmi->ri.zumaMask, zuma.angle + PI / 2, zuma.position, true);
+	return;
+}
+
+
+void paintFlyingBall(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi) {//TODO:绘制镜像翻转的鱼（flyingball），使之眼睛朝上？
+	for (int i = 0; i < fba.size; i++) {
+		rotateAndPaint(pmi->ri.ballImgs + fba.pfb[i].color, pmi->ri.ballMaskImgs + fba.pfb[i].color, fba.pfb[i].angle, fba.pfb[i].position, true);
+		fillcircle(fba.pfb[i].position.x, fba.pfb[i].position.y, pmi->gs.ballR);
+		//floodfill(fba.pfb[i].position.x, fba.pfb[i].position.y, WHITE);
 	}
 	return;
 }

@@ -6,7 +6,7 @@
 ### 实现多BallList与新地图存储方式下的v1.0功能
 * ballList.cpp:117 TODO:add insertBallList(with Animation...)
 * ballList.cpp:155 TODO：适配testCrash
-* paint.cpp:38 TODO:完成paintBallList(和paintAllBallList)
+
 
 
 ### 核心游戏部分

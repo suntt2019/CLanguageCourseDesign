@@ -22,8 +22,8 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
-#define DEBUG_OUTPUT 2
-
+#define DEBUG_OUTPUT 1
+#define TORLANCE 0
 
 typedef struct _Point {
 	double x;
@@ -81,6 +81,8 @@ typedef struct _Route {
 typedef struct _BallOnList {
 	double position, force;
 	int color;
+	bool isInserting;
+	Point point;
 	struct _BallOnList* prev;
 	struct _BallOnList* next;
 }BallOnList;
@@ -136,7 +138,7 @@ Point speed(MapInfo* pmi, double position);
 void initStoredRoute(MapInfo* pmi);
 double getSpeedValue(MapInfo* pmi, double position);
 Point makePoint(double x, double y);
-void paintBallList(BallList& bl, MapInfo* pmi);
+void paintBallList(BallList* pbl, MapInfo* pmi);
 void paintFlyingBall(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi);
 Point route(MapInfo* pmi, double position);
 void loadMap(MapInfo* pmi, char* folder, char* mapName);
@@ -162,7 +164,16 @@ void paintViewBallList(BallList* pbl, MapInfo* pmi);
 void paintViewAllBallList(BallList* pbl, MapInfo* pmi);
 void computeZuma(Zuma* pzuma);
 void launchFlyingBall(FlyingBallArray& fba, int colorCount);
-
+double getAngle(Point p);
+double getAngle(double x, double y);
+double routeArgle(Route* pr, int position);
+Point minus(Point a, Point b);
+void paintAllBallList(BallList* pbl, MapInfo* pmi);
+bool isZero(Point p);
+bool isNextTo(GameSettings* pgs, BallOnList* p1, BallOnList* p2);
+bool isOverLapping(GameSettings* pgs, BallOnList* p1, BallOnList* p2);
+void correctOverLapping(BallList* pbl, MapInfo* pmi);
+void computeBallListPoint(BallList* pbl, MapInfo* pmi);
 
 void test(MapInfo* pmi);
 

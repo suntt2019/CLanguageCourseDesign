@@ -10,12 +10,14 @@ void initPainting() {
 void paintImage(MajorData* pmd) {
 	BeginBatchDraw();//开始批量绘图
 	putimage(0, 0, pmd->mi.ri.background);
-	//paintBallList(pmd->ballList, &pmd->mi);
+	paintAllBallList(pmd->pbl, &pmd->mi);
 	paintFlyingBall(pmd->flyingBallArray, pmd->zuma, &pmd->mi);
 	paintZuma(pmd->zuma, &pmd->mi);
-	for (int i = 0; i < pmd->mi.mpi.ballListCount; i++)
-		viewRoute(pmd->mi.pr+i);
-	paintViewAllBallList(pmd->pbl, &pmd->mi);
+	if (DEBUG_OUTPUT) {
+		for (int i = 0; i < pmd->mi.mpi.ballListCount; i++)
+			viewRoute(pmd->mi.pr + i);
+		paintViewAllBallList(pmd->pbl, &pmd->mi);
+	}
 	FlushBatchDraw();
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
 
@@ -35,20 +37,23 @@ void viewRoute(Route* pr) {
 }
 
 
-//TODO:完成paintBallList(和paintAllBallList)
-//需要求角度
-/*
+void paintAllBallList(BallList* pbl, MapInfo* pmi) {
+	for (int i = 0; i < pmi->mpi.ballListCount; i++)
+		paintBallList(pbl + i, pmi);
+	return;
+}
+
 void paintBallList(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	Point point;
 	while (p) {
-		point = route(pbl->pr, (int)p->position);
-		fillcircle(point.x, point.y, pmi->gs.ballR);
+		rotateAndPaint(pmi->ri.ballImgs + p->color, pmi->ri.ballMaskImgs + p->color,
+			routeArgle(pbl->pr,(int)p->position), p->point , false);
 		p = p->prev;
 	}
 	return;
 }
-*/
+
 
 void paintViewAllBallList(BallList* pbl, MapInfo* pmi) {
 	for (int i = 0; i < pmi->mpi.ballListCount; i++)
@@ -61,7 +66,7 @@ void paintViewBallList(BallList* pbl,MapInfo* pmi) {
 	Point point;
 	while (p) {
 		point = route(pbl->pr, (int)p->position);
-		fillcircle(point.x,point.y, pmi->gs.ballR);
+		fillcircle(p->point.x,p->point.y, pmi->gs.ballR);
 		p = p->prev;
 	}
 	return;

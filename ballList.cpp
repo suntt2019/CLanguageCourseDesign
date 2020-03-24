@@ -39,6 +39,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	pbl->tail->prev = NULL;
 	pbl->tail->position = -(pr->ballCount * 2 - 1) * pmi->gs.ballR;
 	pbl->tail->force = 0;
+	pbl->tail->isInserting = false;
 
 	BallOnList* p = pbl->tail;
 	for (int i = 1; i < pr->ballCount; i++) {
@@ -50,6 +51,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 		p = p->prev;
 		p->position = -(pr->ballCount * 2 - 2*i - 1) * pmi->gs.ballR;
 		p->force = 0;
+		p->isInserting = false;
 	}
 	p->prev = NULL;
 
@@ -79,6 +81,10 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 
 	applyForceToPosition(pbl,pmi);
 
+	correctOverLapping(pbl, pmi);
+
+	computeBallListPoint(pbl, pmi);
+
 	if (DEBUG_OUTPUT > 1) {
 		viewBallList(pbl);
 	}
@@ -105,7 +111,7 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 		longjmp(env, 6);
 	while (p->prev) {
 		p->position += p->force;
-		if (p->prev->position - p->position <= pmi->gs.ballR * 2)//如果两球相邻
+		if (isNextTo(&pmi->gs,p,p->prev))//如果两球相邻
 			p->prev->force = p->force;
 		p = p->prev;
 	}
@@ -113,13 +119,49 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 	return;
 }
 
+bool isNextTo(GameSettings* pgs,BallOnList* p1,BallOnList* p2) {
+	if (p1->isInserting || p2->isInserting)
+		return true;//TODO:用point测量
+	return p2->position - p1->position <= pgs->ballR * 2;
+}
+
+bool isOverLapping(GameSettings* pgs, BallOnList* p1, BallOnList* p2) {
+	if (p1->isInserting || p2->isInserting)
+		return false;
+	return p2->position - p1->position < pgs->ballR * 2 - TORLANCE;
+}
+
+
+void correctOverLapping(BallList* pbl, MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	while (p&& p->prev) {
+		if (isOverLapping(&pmi->gs, p, p->prev))
+			p->prev->position += p->prev->position - p->position - pmi->gs.ballR * 2;
+		p = p->prev;
+	}
+	return;
+}
+
+
+void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	while (p) {
+		if (p->isInserting) {
+
+		}else {
+			p->point = route(pbl->pr, p->position);
+		}
+		p = p->prev;
+	}
+	return;
+}
 
 //TODO:add insertBallList(with Animation...)
 /*
 void insertBallList(BallList& bl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi) {
 	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
 	BallOnList* q;
-	if (!p) {
+	if (!p) { 
 		printf("[Excption] initBallList: excption when creating ball.\n");
 		return;
 	}

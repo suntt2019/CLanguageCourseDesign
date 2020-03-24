@@ -22,3 +22,33 @@ bool testPointDistance(Point p1, Point p2, double minD) {
 bool compareDistance(Point p, Point pTrue, Point pFalse) {
 	return pow((p.x - pTrue.x), 2) + pow((p.y - pTrue.y), 2) > pow((p.x - pFalse.x), 2) + pow((p.y - pFalse.y), 2);
 }
+
+double getAngle(Point p) {
+	double ret;
+	if (p.x == 0)
+		p.x = 0.000001;
+	ret = atan(p.y/p.x);
+	if (p.x < 0)
+		ret += PI;
+	return ret;
+}
+
+double getAngle(double x, double y) {
+	double ret;
+	if(x==0)
+		x = 0.000001;
+	ret = atan(y/x);
+	if (x < 0)
+		ret += PI;
+	return ret;
+}
+
+Point minus(Point a, Point b) {
+	return makePoint(a.x - b.x, a.y - b.y);
+}
+
+bool isZero(Point p) {
+	if (p.x == 0 && p.y == 0)
+		return true;
+	return false;
+}

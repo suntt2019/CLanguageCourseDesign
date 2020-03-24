@@ -12,12 +12,7 @@ void operateMouseEvents(MajorData* pmd) {
 		mmsg = GetMouseMsg();
 		deltaX = mmsg.x - pmd->zuma.position.x;
 		deltaY = -(mmsg.y - pmd->zuma.position.y);
-		if (deltaX == 0)
-			deltaX = 0.0001;
-		tanOfAngle = deltaY / deltaX;
-		pmd->zuma.angle = atan(tanOfAngle);
-		if (deltaX < 0)
-			pmd->zuma.angle += PI;
+		pmd->zuma.angle = getAngle(deltaX, deltaY);
 		
 		if (mmsg.mkLButton && pmd->zuma.CDremain == 0) {
 			launchFlyingBall(pmd->flyingBallArray, pmd->mi.ri.colorCount);

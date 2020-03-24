@@ -22,7 +22,7 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
-#define DEBUG_OUTPUT 1
+#define DEBUG_OUTPUT 2
 #define TORLANCE 0
 
 typedef struct _Point {
@@ -170,12 +170,17 @@ double routeArgle(Route* pr, int position);
 Point minus(Point a, Point b);
 void paintAllBallList(BallList* pbl, MapInfo* pmi);
 bool isZero(Point p);
-bool isNextTo(GameSettings* pgs, BallOnList* p1, BallOnList* p2);
+bool isNextTo(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2);
 bool isOverLapping(GameSettings* pgs, BallOnList* p1, BallOnList* p2);
 void correctOverLapping(BallList* pbl, MapInfo* pmi);
 void computeBallListPoint(BallList* pbl, MapInfo* pmi);
 void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
 void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
+bool isNextToInserting(BallList* pbl, GameSettings* pgs, BallOnList* p_ins, BallOnList* p_another);
+void computeInsertingPush(BallList* pbl, MapInfo* pmi);
+void testEndPointInsertingBall(BallList* pbl, MapInfo* pmi);
+
+
 
 void test(MapInfo* pmi);
 

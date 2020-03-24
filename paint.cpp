@@ -67,6 +67,8 @@ void paintViewBallList(BallList* pbl,MapInfo* pmi) {
 	while (p) {
 		point = route(pbl->pr, (int)p->position);
 		fillcircle(p->point.x,p->point.y, pmi->gs.ballR);
+		if(p->isInserting)
+			fillcircle(p->point.x, p->point.y, pmi->gs.ballR+2);
 		p = p->prev;
 	}
 	return;

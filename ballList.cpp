@@ -1,5 +1,5 @@
 #include "zuma.h"
-
+#define INSERT_PUSH_FORCE 10
 
 void viewBallList(BallList* pbl) {
 	printf("  [viewBallList] tail=%p, pr=%p\n", pbl->tail, pbl->pr);
@@ -76,13 +76,16 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 		p->force = 0;
 		p = p->prev;
 	}
+	//TODO:函数参数轻量化（pmi => pgs 等）
+	testEndPointInsertingBall(pbl, pmi);
+
 	computeBeginningRush(pbl,pmi);
 	computeNormalPush(pbl, pmi);
-
+	computeInsertingPush(pbl, pmi);
 	//TODO-insert:3.给前球加force 
 
 	applyForceToPosition(pbl,pmi);
-	correctOverLapping(pbl, pmi);
+	//correctOverLapping(pbl, pmi);
 	computeBallListPoint(pbl, pmi);
 
 	if (DEBUG_OUTPUT > 1) {
@@ -105,24 +108,44 @@ void computeNormalPush(BallList* pbl, MapInfo* pmi) {
 	return;
 }
 
+void computeInsertingPush(BallList* pbl, MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	while (p->prev) {
+		if (p->isInserting)
+			p->prev->force += INSERT_PUSH_FORCE;
+		p = p->prev;
+	}
+	return;
+}
+
 void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	if (!p)
 		longjmp(env, 6);
 	while (p->prev) {
-		p->position += p->force;
-		if (isNextTo(&pmi->gs,p,p->prev))//如果两球相邻
-			p->prev->force = p->force;
+		if (p->isInserting) {
+			p->position = (p->prev->position + p->next->position) / 2;
+		}else {
+			p->position += p->force;
+			if (isNextTo(pbl, &pmi->gs, p, p->prev))//如果两球相邻
+				p->prev->force += p->force;
+		}
 		p = p->prev;
 	}
 	p->position += p->force;
 	return;
 }
 
-bool isNextTo(GameSettings* pgs,BallOnList* p1,BallOnList* p2) {
+bool isNextTo(BallList* pbl,GameSettings* pgs,BallOnList* p1,BallOnList* p2) {
+	/*
+	if (p1->isInserting)
+		return isNextToInserting(pbl, pgs, p1, p2);
+	if (p2->isInserting)
+		return isNextToInserting(pbl, pgs, p2, p1);
+	*/
 	if (p1->isInserting || p2->isInserting)
-		return true;//TODO:用point测量
-	//TODO-insert:2.力传递算法不同
+		return true;
+		//TODO-insert:2.力传递算法不同
 	return p2->position - p1->position <= pgs->ballR * 2;
 }
 
@@ -146,16 +169,62 @@ void correctOverLapping(BallList* pbl, MapInfo* pmi) {
 
 void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
+	if (DEBUG_OUTPUT > 1)
+		printf("[DEBUG_OUTPUT]computeBallListPoint()\n");
 	while (p) {
+		p->point = route(pbl->pr, p->position);
 		if (p->isInserting) {
+			if (!p->next || !p->prev || p->prev->position - p->next->position > pmi->gs.ballR * 4) {//TODO:4
+				p->isInserting = false;
+			}else {
+				//double argle = routeArgle(pbl->pr, p->position) + PI / 2;
+				p->point.x -= cos(routeArgle(pbl->pr, p->position)+PI/2)
+					* sqrt(pow(pmi->gs.ballR, 2) * 4 - pow(p->prev->position - p->next->position, 2) * 0.25);
+				p->point.y += sin(routeArgle(pbl->pr, p->position) + PI / 2)
+					* sqrt(pow(pmi->gs.ballR, 2) * 4 - pow(p->prev->position - p->next->position, 2) * 0.25);
+				//TODO-insert:增加左右判断
+				/*
+				p->point.x -= sin(routeArgle(pbl->pr, p->position) + PI / 2)
+					* (p->prev->position - p->next->position) * 0.5;
+				p->point.y += cos(routeArgle(pbl->pr, p->position) + PI / 2)
+					* (p->prev->position - p->next->position) * 0.5;
+				*/
+			}
 			//TODO-insert:1.计算位置方法不同
-		}else {
-			p->point = route(pbl->pr, p->position);
+		}
+		if (DEBUG_OUTPUT > 1) {
+			printf("  p=%p, p->prev=%p, p->next=%p, p->position=%.2lf, p->point=(%.2lf,%.2lf)\n",
+				p,p->prev,p->next,p->position,p->point.x,p->point.y);
 		}
 		p = p->prev;
 	}
 	return;
 }
+
+void testEndPointInsertingBall(BallList* pbl, MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	while (p) {
+		if (p->isInserting
+			&&(!p->next || !p->prev || p->prev->position - p->next->position > pmi->gs.ballR * 4)) {
+			p->isInserting = false;
+		}
+			p = p->prev;
+	}
+	return;
+}
+
+/*
+bool isNextToInserting(BallList* pbl, GameSettings* pgs,BallOnList* p_ins,BallOnList* p_another) {
+	p_ins->point = route(pbl->pr, p_ins->position);
+	p_ins->point.x -= cos(routeArgle(pbl->pr, p_ins->position) + PI / 2)
+		* sqrt(pow(pgs->ballR, 2) * 4 - pow(p_ins->prev->position - p_ins->next->position, 2) * 0.25);
+	p_ins->point.y += sin(routeArgle(pbl->pr, p_ins->position) + PI / 2)
+		* sqrt(pow(pgs->ballR, 2) * 4 - pow(p_ins->prev->position - p_ins->next->position, 2) * 0.25);
+	p_another->point = route(pbl->pr, p_another->position);
+
+	return testPointDistance(p_ins->point, p_another->point, pgs->ballR * 2 + TORLANCE);
+}
+*/
 
 //TODO:add insertBallList(with Animation...)
 
@@ -170,7 +239,7 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 	p->prev = pbol_prev;
 	p->next = pbol_next;
 	p->force = 0;
-	p->isInserting = false;//TODO:true!!!!!!!!
+	p->isInserting = true;//TODO:true!!!!!!!!
 	//printf("%.4lf~between %.4lf and %.4lf\n", p->position,pbol_prev->position,pbol_next->position);
 
 	if (!pbol_prev) {
@@ -183,14 +252,16 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 		pbol_prev->next = p;
 	}
 	else {
-		p->position = pbol_prev->position;
+		p->position = (pbol_prev->position+pbol_next->position)/2;
 		pbol_prev->next = p;
 		pbol_next->prev = p;
 		q = pbol_prev;
+		/*
 		while (q) {
-			q->position += 2 * pmi->gs.ballR;
+			q->position += 2 * pmi->gs.ballR * 0;
 			q = q->prev;
 		}
+		*/
 	}
 	removeFlyingBall(fba, index);
 	return;

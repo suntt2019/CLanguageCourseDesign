@@ -16,7 +16,7 @@ bool isOutOfScreen(Point p) {
 
 
 bool testPointDistance(Point p1, Point p2, double minD) {
-	return pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2) < pow(minD, 2);
+	return pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2) <= pow(minD, 2);
 }
 
 bool compareDistance(Point p, Point pTrue, Point pFalse) {

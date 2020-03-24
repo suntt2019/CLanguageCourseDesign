@@ -130,7 +130,7 @@ void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position, bo
 bool isOutOfScreen(Point p);
 void justPaint(IMAGE* img, IMAGE* imgMask, Point position);
 bool testPointDistance(Point p1, Point p2, double minD);
-void insertBallList(BallList& bl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi);
+void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi);
 void removeFlyingBall(FlyingBallArray& fba, int index);
 bool compareDistance(Point p, Point pTrue, Point pFalse);
 void initPainting();
@@ -174,6 +174,8 @@ bool isNextTo(GameSettings* pgs, BallOnList* p1, BallOnList* p2);
 bool isOverLapping(GameSettings* pgs, BallOnList* p1, BallOnList* p2);
 void correctOverLapping(BallList* pbl, MapInfo* pmi);
 void computeBallListPoint(BallList* pbl, MapInfo* pmi);
+void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
+void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
 
 void test(MapInfo* pmi);
 

@@ -79,10 +79,10 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 	computeBeginningRush(pbl,pmi);
 	computeNormalPush(pbl, pmi);
 
+	//TODO-insert:3.给前球加force 
+
 	applyForceToPosition(pbl,pmi);
-
 	correctOverLapping(pbl, pmi);
-
 	computeBallListPoint(pbl, pmi);
 
 	if (DEBUG_OUTPUT > 1) {
@@ -122,6 +122,7 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 bool isNextTo(GameSettings* pgs,BallOnList* p1,BallOnList* p2) {
 	if (p1->isInserting || p2->isInserting)
 		return true;//TODO:用point测量
+	//TODO-insert:2.力传递算法不同
 	return p2->position - p1->position <= pgs->ballR * 2;
 }
 
@@ -147,7 +148,7 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	while (p) {
 		if (p->isInserting) {
-
+			//TODO-insert:1.计算位置方法不同
 		}else {
 			p->point = route(pbl->pr, p->position);
 		}
@@ -157,26 +158,28 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 }
 
 //TODO:add insertBallList(with Animation...)
-/*
-void insertBallList(BallList& bl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi) {
+
+void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi) {
 	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
 	BallOnList* q;
 	if (!p) { 
-		printf("[Excption] initBallList: excption when creating ball.\n");
+		longjmp(env, 5);
 		return;
 	}
 	p->color = fba.pfb[index].color;
 	p->prev = pbol_prev;
 	p->next = pbol_next;
+	p->force = 0;
+	p->isInserting = false;//TODO:true!!!!!!!!
 	//printf("%.4lf~between %.4lf and %.4lf\n", p->position,pbol_prev->position,pbol_next->position);
 
 	if (!pbol_prev) {
-		p->position = pbol_next->position + 2 * pmi->ballR / getSpeedValue(pmi, pbol_next->position);
-		bl.firstBall = p;
+		p->position = pbol_next->position + 2 * pmi->gs.ballR;
 		pbol_next->prev = p;
 	}
 	else if (!pbol_next) {
-		p->position = pbol_prev->position - 2 * pmi->ballR / getSpeedValue(pmi, pbol_prev->position);
+		p->position = pbol_prev->position - 2 * pmi->gs.ballR;
+		pbl->tail = p;
 		pbol_prev->next = p;
 	}
 	else {
@@ -185,31 +188,37 @@ void insertBallList(BallList& bl, BallOnList* pbol_prev, BallOnList* pbol_next, 
 		pbol_next->prev = p;
 		q = pbol_prev;
 		while (q) {
-			q->position += 2 * pmi->ballR / getSpeedValue(pmi, q->position);
+			q->position += 2 * pmi->gs.ballR;
 			q = q->prev;
 		}
 	}
 	removeFlyingBall(fba, index);
 	return;
 }
-*/
 
-//TODO：适配testCrash
-/*
-void testCrash(BallList& bl, FlyingBallArray& fba, int index, MapInfo* pmi) {
-	BallOnList* p = bl.firstBall;
-	//double thisBallPosition = bl.firstBallPosition;
+//TODO:用函数指针把这些all整合成一个
+void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
+	for (int i = 0; i < pmi->mpi.ballListCount; i++)
+		testCrash(pbl + i, fba, index, pmi);
+	return;
+}
+
+void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	//double thisBallPosition = pbl->firstBallPosition;
 	while (p) {
-		if (testPointDistance(pmi->routePoints[(int)p->position], fba.pfb[index].position, pmi->ballR * 2)) {
+		if (testPointDistance(p->point, fba.pfb[index].position, pmi->gs.ballR * 2)) {
 			if (compareDistance(fba.pfb[index].position,
-				(p->position > pmi->ballR * 2 ? pmi->routePoints[(int)(p->position - pmi->ballR * 2)] : pmi->routePoints[0]), pmi->routePoints[(int)(p->position + pmi->ballR * 2)]))
-				insertBallList(bl, p->prev, p, fba, index, pmi);
+				(p->position > pmi->gs.ballR * 2 ? 
+					route(pbl->pr,(int)(p->position - pmi->gs.ballR * 2)) : route(pbl->pr,0)),
+				route(pbl->pr,(int)(p->position + pmi->gs.ballR * 2))))
+				insertBallList(pbl, p->prev, p, fba, index, pmi);
 			else
-				insertBallList(bl, p, p->next, fba, index, pmi);
+				insertBallList(pbl, p, p->next, fba, index, pmi);
 			break;
 		}
-		p = p->next;
+		p = p->prev;
 		//thisBallPosition -= pmi->ballR * 2;
 	}
 }
-*/
+

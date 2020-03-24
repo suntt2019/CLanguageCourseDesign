@@ -25,8 +25,7 @@ void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo
 		if (isOutOfScreen(fba.pfb[i].position)) {
 			removeFlyingBall(fba, i);
 		}
-		//testCrash(bl, fba, i, pmi);
-		//TODO: enable testCrash
+		testCrashAll(&bl, fba, i, pmi);
 	}
 
 	return;

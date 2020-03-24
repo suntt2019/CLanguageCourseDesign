@@ -8,7 +8,7 @@ Point route(Route* pr, int position) {
 		return makePoint(NEGTIVE_ROUTE_POINT_X, NEGTIVE_ROUTE_POINT_Y);
 	if (position >= pr->pointCount)
 		longjmp(env, 7);
-	return pr->pointArray[position];
+	return pr->pointArray[position];//这里下标越界，还没做gameover判定，所以这里exception是正常情况
 }
 
 double routeArgle(Route* pr, int position) {//TODO:增加对于的正在插入的球的支持

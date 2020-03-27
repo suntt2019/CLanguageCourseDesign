@@ -11,7 +11,7 @@
 
 #define PI 3.14159269
 
-#define WIDTH 800
+#define WIDTH 1200
 #define HEIGHT 600
 
 #define STORE_BY_POINTS 0
@@ -82,6 +82,7 @@ typedef struct _BallOnList {
 	double position, force;
 	int color;
 	bool isInserting;
+	double insertingDegree;
 	Point point;
 	struct _BallOnList* prev;
 	struct _BallOnList* next;
@@ -179,7 +180,7 @@ void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
 bool isNextToInserting(BallList* pbl, GameSettings* pgs, BallOnList* p_ins, BallOnList* p_another);
 void computeInsertingPush(BallList* pbl, MapInfo* pmi);
 void testEndPointInsertingBall(BallList* pbl, MapInfo* pmi);
-
+double getR(BallOnList* p, GameSettings* pgs);
 
 
 void test(MapInfo* pmi);

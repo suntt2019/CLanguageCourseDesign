@@ -1,6 +1,7 @@
 #include "zuma.h"
 #define INSERT_PUSH_FORCE 10
 #define INSERTING_SPEED 0.05
+#define TEST_R 10
 
 void viewBallList(BallList* pbl) {
 	printf("  [viewBallList] tail=%p, pr=%p\n", pbl->tail, pbl->pr);
@@ -41,7 +42,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	pbl->tail->position = -(pr->ballCount * 2 - 1) * pmi->gs.ballR;
 	pbl->tail->force = 0;
 	//pbl->tail->isInserting = false;
-	pbl->tail->insertingDegree = 1;
+	pbl->tail->insertingDegree = 0;
 
 	BallOnList* p = pbl->tail;
 	for (int i = 1; i < pr->ballCount; i++) {
@@ -54,7 +55,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 		p->position = -(pr->ballCount * 2 - 2*i - 1) * pmi->gs.ballR;
 		p->force = 0;
 		//p->isInserting = false;
-		p->insertingDegree = 1;
+		p->insertingDegree = 0;
 	}
 	p->prev = NULL;
 
@@ -77,7 +78,9 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	while (p) {
 		p->force = 0;
-		if (p->insertingDegree < 1)
+		if (p->insertingDegree > TORLANCE)
+			p->insertingDegree -= INSERTING_SPEED;
+		else if(p->insertingDegree < -TORLANCE)
 			p->insertingDegree += INSERTING_SPEED;
 		p = p->prev;
 	}
@@ -116,7 +119,7 @@ void computeNormalPush(BallList* pbl, MapInfo* pmi) {
 void computeInsertingPush(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	while (p->prev) {
-		if (p->insertingDegree<1&&isNextTo(pbl,&pmi->gs,p,p->prev))
+		if (p->insertingDegree&&isNextTo(pbl,&pmi->gs,p,p->prev))
 			//p->prev->force += INSERT_PUSH_FORCE;
 			//TODO:ins2：改为动态的
 			//p->prev->force +=
@@ -161,8 +164,8 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 }
 
 double getR(BallOnList* p,GameSettings* pgs) {
-	if (p->insertingDegree < 1) {
-		return p->insertingDegree * pgs->ballR;
+	if (fabs(p->insertingDegree)> TORLANCE) {
+		return (1-fabs(p->insertingDegree)) * pgs->ballR;
 	}
 	else {
 		return pgs->ballR;
@@ -202,13 +205,11 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 		printf("[DEBUG_OUTPUT]computeBallListPoint()\n");
 	while (p) {
 		p->point = route(pbl->pr, p->position);
-		if (p->insertingDegree < 1) {
+		if (fabs(p->insertingDegree) > TORLANCE) {
 			p->point.x -= cos(routeArgle(pbl->pr, p->position) + PI / 2)
-				* pmi->gs.ballR * (1-p->insertingDegree);
-				//* sqrt(pow(pmi->gs.ballR, 2) * 4 - pow(p->prev->position - p->next->position, 2) * 0.25);
+				* pmi->gs.ballR * p->insertingDegree;
 			p->point.y += sin(routeArgle(pbl->pr, p->position) + PI / 2)
-				* pmi->gs.ballR * (1 - p->insertingDegree);
-				//* sqrt(pow(pmi->gs.ballR, 2) * 4 - pow(p->prev->position - p->next->position, 2) * 0.25);
+				* pmi->gs.ballR * p->insertingDegree;
 		}
 		//if (p->insertingDegree<1) {
 		//	if (!p->next || !p->prev || p->prev->position - p->next->position > pmi->gs.ballR * 4) {//TODO:4
@@ -276,7 +277,7 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 	p->prev = pbol_prev;
 	p->next = pbol_next;
 	p->force = 0;
-	p->insertingDegree = 0;
+
 	//printf("%.4lf~between %.4lf and %.4lf\n", p->position,pbol_prev->position,pbol_next->position);
 
 	if (!pbol_prev) {
@@ -300,6 +301,17 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 		}
 		*/
 	}
+	//judge
+	p->point = route(pbl->pr,(int)p->position);
+	Point p1 = makePoint(p->point.x - cos(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R,
+		p->point.y + sin(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R);
+	Point p2 = makePoint(p->point.x + cos(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R,
+		p->point.y - sin(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R);
+	p->insertingDegree = compareDistance(fba.pfb[index].position, p1, p2) ? -1 : 1;
+	//printf("inserting judge:flyingball:(%.2lf,%.2lf),p1(%.2lf,%.2lf),p2(%.2lf,%.2lf),ret=%.2lf\n",
+	//	fba.pfb[index].position.x, fba.pfb[index].position.y, p1.x, p1.y, p2.x, p2.y, p->insertingDegree);
+
+
 	removeFlyingBall(fba, index);
 	return;
 }

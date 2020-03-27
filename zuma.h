@@ -22,8 +22,8 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
-#define DEBUG_OUTPUT 2
-#define TORLANCE 0
+#define DEBUG_OUTPUT 1
+#define TORLANCE 0.0000000001
 
 typedef struct _Point {
 	double x;

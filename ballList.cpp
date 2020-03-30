@@ -20,7 +20,7 @@ void viewBallList(BallList* pbl) {
 void initAllBallList(BallList** ppbl,MapInfo* pmi) {
 	*ppbl = (BallList*)malloc(sizeof(BallList)* pmi->mpi.ballListCount);
 	if (!*ppbl)
-		longjmp(env, 5);
+		handleException(5);
 	for (int i = 0; i < pmi->mpi.ballListCount; i++)
 		initBallList(*ppbl+i, pmi->pr+i, pmi, (unsigned int)time(0)+i);
 	return;
@@ -35,7 +35,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 
 	pbl->tail = (BallOnList*)malloc(sizeof(BallOnList));
 	if (!pbl->tail)
-		longjmp(env, 5);
+		handleException(5);
 	pbl->tail->color = rand() % pmi->ri.colorCount;
 	pbl->tail ->next = NULL;
 	pbl->tail->prev = NULL;
@@ -47,7 +47,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	for (int i = 1; i < pr->ballCount; i++) {
 		p->prev = (BallOnList*)malloc(sizeof(BallOnList));
 		if (!p->prev)
-			longjmp(env, 5);
+			handleException(5);
 		p->prev->next = p;
 		p->prev->color = rand() % pmi->ri.colorCount;
 		p = p->prev;
@@ -114,7 +114,7 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	double overLappingDistance;
 	if (!p)
-		longjmp(env, 6);
+		handleException(6);
 	while (p->prev) {
 		if (getGapBetweenBOL(pbl, &pmi->gs,p,p->prev))//如果两球相邻
 			p->prev->force += p->force;
@@ -165,7 +165,7 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
 	BallOnList* q;
 	if (!p) { 
-		longjmp(env, 5);
+		handleException(5);
 		return;
 	}
 	p->color = fba.pfb[index].color;

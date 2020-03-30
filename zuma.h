@@ -23,7 +23,8 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
-#define DEBUG_OUTPUT 1
+
+#define DEBUG_OUTPUT 0
 #define TORLANCE 0.01
 
 typedef struct _Point {
@@ -145,7 +146,7 @@ void parseJsonString(const cJSON* json, char* name, char* str);
 void parseJsonPoint(const cJSON* json, char* name, Point* pPoint);
 void loadRouteFile(Route* pr, char* dir);
 void viewRoute(Route* pr);
-void operateException();
+int handleException(int errorCode);
 void initAllBallList(BallList** ppbl, MapInfo* pmi);
 void computeBallList(BallList* pbl, MapInfo* pmi);
 void computeBeginningRush(BallList* pbl, MapInfo* pmi);
@@ -169,10 +170,11 @@ void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
 double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2);
 void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
+int gameMain();
 
-void test(MapInfo* pmi);
+void test();
 
 
-extern jmp_buf env;
+
 
 

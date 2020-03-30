@@ -17,7 +17,7 @@ void loadMap(MapInfo* pmi,char* folder,char* mapName) {
 	sprintf(dirBuffer, "%s\\%s\\%s.json",folder,mapName,mapName);
 	fp = fopen(dirBuffer, "r");
 	if (!fp)
-		longjmp(env, 1);
+		handleException(1);
 
 	do {
 		isNEOF=fgets(mapJsonLine, JSON_LINE_MAX, fp);
@@ -40,7 +40,7 @@ void loadMap(MapInfo* pmi,char* folder,char* mapName) {
 void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 	cJSON* gameSettingsJson = cJSON_GetObjectItemCaseSensitive(json, "gameSettings");
 	if (!gameSettingsJson)
-		longjmp(env, 3);
+		handleException(3);
 
 
 	int* pInts[] = { &pmi->gs.shootingCD };
@@ -73,7 +73,7 @@ void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, cha
 	cJSON* ballListsJson = cJSON_GetObjectItemCaseSensitive(mapPositionInfoJson, "ballLists");
 	cJSON* zumaJson = cJSON_GetObjectItemCaseSensitive(mapPositionInfoJson, "zuma");
 	if (!mapPositionInfoJson || !ballListsJson || !zumaJson)
-		longjmp(env, 3);
+		handleException(3);
 
 	parseJsonInt(mapPositionInfoJson, "ballListCount", &pmi->mpi.ballListCount);
 	pmi->pr = (Route*)malloc(sizeof(Route) * pmi->mpi.ballListCount);
@@ -82,7 +82,7 @@ void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, cha
 	int i = 0;
 	cJSON_ArrayForEach(ballListJson, ballListsJson) {
 		if (i > pmi->mpi.ballListCount - 1)
-			longjmp(env, 0);//TODO:增加新的exception-过多的BallList
+			handleException(0);//TODO:增加新的exception-过多的BallList
 		parseBallListJson(pmi->pr + i, ballListJson, folder, mapName);
 		i++;
 	}
@@ -157,7 +157,7 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 	for (int i = 0; i < 3; i++) {
 		*pimgs[i] = new IMAGE[1];
 		if (!*pimgs[i])
-			longjmp(env, 5);
+			handleException(5);
 		parseJsonString(resourceInfoJson, nameOfImgs[i], strBuffer);
 		sprintf(dirBuffer, "%s\\%s\\%s", folder, mapName, strBuffer);
 		loadimage(*pimgs[i], dirBuffer);
@@ -167,7 +167,7 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 
 	cJSON* ballsJson = cJSON_GetObjectItemCaseSensitive(resourceInfoJson, "balls");
 	if (!ballsJson)
-		longjmp(env, 3);
+		handleException(3);
 	parseJsonInt(ballsJson, "colorCount", &pmi->ri.colorCount);
 	pmi->ri.ballImgs = new IMAGE[pmi->ri.colorCount];
 	pmi->ri.ballMaskImgs = new IMAGE[pmi->ri.colorCount];
@@ -175,7 +175,7 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 	int i = 0;
 	cJSON* ballsResourceJson = cJSON_GetObjectItemCaseSensitive(ballsJson, "resource");
 	if (!ballsResourceJson)
-		longjmp(env, 3);
+		handleException(3);
 
 	if (DEBUG_OUTPUT) {
 		printf("\n[DEBUG_OUTPUT]parseResourceInfoJson():\n");
@@ -207,7 +207,7 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 void parseJsonString(const cJSON* json, char* name, char* str) {
 	cJSON* stringJson = cJSON_GetObjectItemCaseSensitive(json, name);
 	if (!stringJson||!cJSON_IsString(stringJson))
-		longjmp(env, 3);
+		handleException(3);
 	strcpy(str, stringJson->valuestring);
 	//str = stringJson->valuestring;
 	//切记C语言中字符串不能直接=赋值，这个bug导致后面的IMAGE*被sprintf的一堆“烫”覆盖了
@@ -224,11 +224,11 @@ void parseJsonString(const cJSON* json, char* name, char* str) {
 void parseJsonPoint(const cJSON* json, char* name, Point* pPoint) {
 	cJSON* pointJson = cJSON_GetObjectItemCaseSensitive(json, name);
 	if (!pointJson)
-		longjmp(env, 3);
+		handleException(3);
 	cJSON* pointJsonX = cJSON_GetObjectItemCaseSensitive(pointJson, "x");
 	cJSON* pointJsonY = cJSON_GetObjectItemCaseSensitive(pointJson, "y");
 	if (!pointJsonX || !pointJsonY || !cJSON_IsNumber(pointJsonX) || !cJSON_IsNumber(pointJsonY))
-		longjmp(env, 3);
+		handleException(3);
 	*pPoint = makePoint(pointJsonX->valuedouble, pointJsonY->valuedouble);
 	//cJSON_Delete(pointJson);
 	//cJSON_Delete(pointJsonX);
@@ -239,7 +239,7 @@ void parseJsonPoint(const cJSON* json, char* name, Point* pPoint) {
 void parseJsonInt(const cJSON* json,char* name, int* pInt) {
 	cJSON* intJson = cJSON_GetObjectItemCaseSensitive(json, name);
 	if (!intJson||!cJSON_IsNumber(intJson))
-		longjmp(env, 3);
+		handleException(3);
 	*pInt = intJson->valueint;
 	//cJSON_Delete(intJson);
 	return;
@@ -248,7 +248,7 @@ void parseJsonInt(const cJSON* json,char* name, int* pInt) {
 void parseJsonDouble(const cJSON* json, char* name, double* pDouble) {
 	cJSON* doubleJson = cJSON_GetObjectItemCaseSensitive(json, name);
 	if (!doubleJson || !cJSON_IsNumber(doubleJson))
-		longjmp(env, 3);
+		handleException(3);
 	*pDouble = doubleJson->valuedouble;
 	//cJSON_Delete(doubleJson);
 	return;
@@ -257,13 +257,13 @@ void parseJsonDouble(const cJSON* json, char* name, double* pDouble) {
 void loadRouteFile(Route* pr,char* dir) {
 	FILE* fp = fopen(dir, "r");
 	if (!fp)
-		longjmp(env, 1);
+		handleException(1);
 	pr->pointArray = (Point*)malloc(sizeof(Point) * pr->pointCount);
 	if (!pr->pointArray)
-		longjmp(env, 5);
+		handleException(5);
 	for (int i = 0; i < pr->pointCount; i++)
 		if (fscanf(fp, "%lf %lf", &(pr->pointArray + i)->x, &(pr->pointArray + i)->y)!=2)
-			longjmp(env,2);
+			handleException(2);
 	if (DEBUG_OUTPUT) {
 		printf("  loadRouteFile():\n");
 		printf("    loaded %d points, first one : (%.2lf,%.2lf)  (&=%p)\n", 

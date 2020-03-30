@@ -10,6 +10,7 @@
 #include "cJSON/cJSON.h"
 
 #define PI 3.14159269
+#define SQRT_3 1.7320508
 
 #define WIDTH 1200
 #define HEIGHT 600
@@ -23,7 +24,7 @@
 #define FLYING_BALL_ARRAY_SIZE 100
 
 #define DEBUG_OUTPUT 1
-#define TORLANCE 0.0000000001
+#define TORLANCE 0.01
 
 typedef struct _Point {
 	double x;
@@ -82,7 +83,7 @@ typedef struct _BallOnList {
 	double position, force;
 	int color;
 	bool isInserting;
-	double insertingDegree;
+	double routeBias;
 	Point point;
 	struct _BallOnList* prev;
 	struct _BallOnList* next;
@@ -181,7 +182,7 @@ bool isNextToInserting(BallList* pbl, GameSettings* pgs, BallOnList* p_ins, Ball
 void computeInsertingPush(BallList* pbl, MapInfo* pmi);
 void testEndPointInsertingBall(BallList* pbl, MapInfo* pmi);
 double getR(BallOnList* p, GameSettings* pgs);
-
+double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2);
 
 void test(MapInfo* pmi);
 

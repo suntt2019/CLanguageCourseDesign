@@ -67,7 +67,7 @@ void paintViewBallList(BallList* pbl,MapInfo* pmi) {
 	while (p) {
 		point = route(pbl->pr, (int)p->position);
 		fillcircle(p->point.x,p->point.y, pmi->gs.ballR);
-		if(fabs(p->insertingDegree)>TORLANCE)
+		if(fabs(p->routeBias)>TORLANCE)
 			fillcircle(p->point.x, p->point.y, pmi->gs.ballR+2);
 		p = p->prev;
 	}

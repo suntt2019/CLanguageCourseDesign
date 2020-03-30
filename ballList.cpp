@@ -1,6 +1,6 @@
 #include "zuma.h"
 #define INSERT_PUSH_FORCE 10
-#define INSERTING_SPEED 0.05
+#define INSERTING_SPEED 0.05 * SQRT_3
 #define TEST_R 10
 
 void viewBallList(BallList* pbl) {
@@ -42,7 +42,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	pbl->tail->position = -(pr->ballCount * 2 - 1) * pmi->gs.ballR;
 	pbl->tail->force = 0;
 	//pbl->tail->isInserting = false;
-	pbl->tail->insertingDegree = 0;
+	pbl->tail->routeBias = 0;
 
 	BallOnList* p = pbl->tail;
 	for (int i = 1; i < pr->ballCount; i++) {
@@ -55,7 +55,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 		p->position = -(pr->ballCount * 2 - 2*i - 1) * pmi->gs.ballR;
 		p->force = 0;
 		//p->isInserting = false;
-		p->insertingDegree = 0;
+		p->routeBias = 0;
 	}
 	p->prev = NULL;
 
@@ -78,10 +78,10 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	while (p) {
 		p->force = 0;
-		if (p->insertingDegree > TORLANCE)
-			p->insertingDegree -= INSERTING_SPEED;
-		else if(p->insertingDegree < -TORLANCE)
-			p->insertingDegree += INSERTING_SPEED;
+		if (p->routeBias > TORLANCE)
+			p->routeBias -= INSERTING_SPEED;
+		else if(p->routeBias < -TORLANCE)
+			p->routeBias += INSERTING_SPEED;
 		p = p->prev;
 	}
 	//TODO:函数参数轻量化（pmi => pgs 等）
@@ -116,17 +116,17 @@ void computeNormalPush(BallList* pbl, MapInfo* pmi) {
 	return;
 }
 
-void computeInsertingPush(BallList* pbl, MapInfo* pmi) {
-	BallOnList* p = pbl->tail;
-	while (p->prev) {
-		if (p->insertingDegree&&isNextTo(pbl,&pmi->gs,p,p->prev))
-			//p->prev->force += INSERT_PUSH_FORCE;
-			//TODO:ins2：改为动态的
-			//p->prev->force +=
-		p = p->prev;
-	}
-	return;
-}
+//void computeInsertingPush(BallList* pbl, MapInfo* pmi) {
+//	BallOnList* p = pbl->tail;
+//	while (p->prev) {
+//		if (p->routeBias&&isNextTo(pbl,&pmi->gs,p,p->prev))
+//			//p->prev->force += INSERT_PUSH_FORCE;
+//			//TODO:ins2：改为动态的
+//			//p->prev->force +=
+//		p = p->prev;
+//	}
+//	return;
+//}
 
 void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
@@ -143,12 +143,13 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 		//}
 
 		//TODO-ins2：相邻算法改为智能碰撞箱 OK
-		if (isNextTo(pbl, &pmi->gs, p, p->prev))//如果两球相邻
+		if (getGapBetweenBOL(pbl, &pmi->gs,p,p->prev))//如果两球相邻
 			p->prev->force += p->force;
 		p->position += p->force;
 		
 		if (p->next) {//TODO-ins2：检测若与后球重叠（智能碰撞箱）就多前进一点 OK
-			overLappingDistance = (p->next->position + getR(p->next, &pmi->gs) + getR(p, &pmi->gs)) - p->position;
+			overLappingDistance = -getGapBetweenBOL(pbl, &pmi->gs, p, p->next);
+			//overLappingDistance = (p->next->position + getR(p->next, &pmi->gs) + getR(p, &pmi->gs)) - p->position;
 			if (overLappingDistance > TORLANCE)
 				p->position += overLappingDistance;
 		}
@@ -156,7 +157,8 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 	}
 	p->position += p->force;
 	if (p->next) {//TODO-ins2：检测若与后球重叠（智能碰撞箱）就多前进一点 OK
-		overLappingDistance = (p->next->position + getR(p->next, &pmi->gs) + getR(p, &pmi->gs)) - p->position;
+		overLappingDistance = -getGapBetweenBOL(pbl, &pmi->gs, p, p->next);
+		//overLappingDistance = (p->next->position + getR(p->next, &pmi->gs) + getR(p, &pmi->gs)) - p->position;
 		if (overLappingDistance > TORLANCE)
 			p->position += overLappingDistance;
 	}
@@ -164,22 +166,26 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 }
 
 double getR(BallOnList* p,GameSettings* pgs) {
-	if (fabs(p->insertingDegree)> TORLANCE) {
-		return (1-fabs(p->insertingDegree)) * pgs->ballR;
+	if (fabs(p->routeBias)> TORLANCE) {
+		return (1-fabs(p->routeBias)) * pgs->ballR;
 	}
 	else {
 		return pgs->ballR;
 	}
 }
 
-bool isNextTo(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2) {
-	//TODO-insert:2.力传递算法不同
-	//TODO-ins2：相邻算法改为智能碰撞箱 OK
-	if(DEBUG_OUTPUT>1)
-		printf("    isNextTo() R(p1)=%.2lf,R(p2)=%.2lf,deltaPosition=%.2lf,ret=%d\n",
-			getR(p1, pgs), getR(p2, pgs), p2->position - p1->position, p2->position - p1->position <= (getR(p1, pgs) + getR(p2, pgs)) / 2);
-	return p2->position - p1->position <= getR(p1, pgs) + getR(p2, pgs);
+double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2) {
+	return fabs(p1->position - p2->position) - pgs->ballR * sqrt(4 - pow(p1->routeBias - p2->routeBias, 2));
 }
+
+//bool isNextTo(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2) {
+//	//TODO-insert:2.力传递算法不同
+//	//TODO-ins2：相邻算法改为智能碰撞箱 OK
+//	if(DEBUG_OUTPUT>1)
+//		printf("    isNextTo() R(p1)=%.2lf,R(p2)=%.2lf,deltaPosition=%.2lf,ret=%d\n",
+//			getR(p1, pgs), getR(p2, pgs), p2->position - p1->position, p2->position - p1->position <= (getR(p1, pgs) + getR(p2, pgs)) / 2);
+//	return p2->position - p1->position <= getR(p1, pgs) + getR(p2, pgs);
+//}
 
 //bool isOverLapping(GameSettings* pgs, BallOnList* p1, BallOnList* p2) {
 //	if (p1->isInserting || p2->isInserting)
@@ -205,11 +211,11 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 		printf("[DEBUG_OUTPUT]computeBallListPoint()\n");
 	while (p) {
 		p->point = route(pbl->pr, p->position);
-		if (fabs(p->insertingDegree) > TORLANCE) {
+		if (fabs(p->routeBias) > TORLANCE) {
 			p->point.x -= cos(routeArgle(pbl->pr, p->position) + PI / 2)
-				* pmi->gs.ballR * p->insertingDegree;
+				* pmi->gs.ballR * p->routeBias;
 			p->point.y += sin(routeArgle(pbl->pr, p->position) + PI / 2)
-				* pmi->gs.ballR * p->insertingDegree;
+				* pmi->gs.ballR * p->routeBias;
 		}
 		//if (p->insertingDegree<1) {
 		//	if (!p->next || !p->prev || p->prev->position - p->next->position > pmi->gs.ballR * 4) {//TODO:4
@@ -231,8 +237,8 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 		//	//TODO-insert:1.计算位置方法不同
 		//}
 		if (DEBUG_OUTPUT > 1) {
-			printf("  p=%p, p->prev=%p, p->next=%p, p->position=%.2lf, p->point=(%.2lf,%.2lf)\n",
-				p,p->prev,p->next,p->position,p->point.x,p->point.y);
+			printf("  p=%p, p->prev=%p, p->next=%p, p->position=%.2lf, p->routeBias=%.2lf, p->point=(%.2lf,%.2lf)\n",
+				p,p->prev,p->next,p->position,p->routeBias,p->point.x,p->point.y);
 		}
 		p = p->prev;
 	}
@@ -307,7 +313,7 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 		p->point.y + sin(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R);
 	Point p2 = makePoint(p->point.x + cos(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R,
 		p->point.y - sin(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R);
-	p->insertingDegree = compareDistance(fba.pfb[index].position, p1, p2) ? -1 : 1;
+	p->routeBias = compareDistance(fba.pfb[index].position, p1, p2) ? -SQRT_3 : SQRT_3;
 	//printf("inserting judge:flyingball:(%.2lf,%.2lf),p1(%.2lf,%.2lf),p2(%.2lf,%.2lf),ret=%.2lf\n",
 	//	fba.pfb[index].position.x, fba.pfb[index].position.y, p1.x, p1.y, p2.x, p2.y, p->insertingDegree);
 

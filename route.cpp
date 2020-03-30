@@ -11,7 +11,7 @@ Point route(Route* pr, int position) {
 	return pr->pointArray[position];//这里下标越界，还没做gameover判定，所以这里exception是正常情况
 }
 
-double routeArgle(Route* pr, int position) {//TODO:增加对于的正在插入的球的支持
+double routeArgle(Route* pr, int position) {
 	if (position < 0)
 		return NEGTIVE_ROUTE_ANGLE;
 	if (position >= pr->pointCount)

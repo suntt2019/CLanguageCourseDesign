@@ -32,7 +32,6 @@ typedef struct _Point {
 }Point;
 
 
-
 typedef struct _RouteFunctionArgs {
 	double minP, maxP;
 	double Rx, Nx, Ox, Px, Kx, Bx;
@@ -48,7 +47,6 @@ typedef struct _Zuma {
 
 typedef struct _FlyingBall {
 	Point position;
-	//bool launched;//这东西其实没用
 	int color;
 	double angle;
 }FlyingBall;
@@ -119,7 +117,6 @@ void demo1();
 void coreGaming(MajorData md);
 void operatingInput(MajorData* pmd);
 void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi);
-bool computingBallList(BallList& bl, MapInfo* pmi);
 void paintImage(MajorData* pmd);
 void initBallList(BallList* pbl, Route* pr, MapInfo* pmi, unsigned int seed);
 void viewBallList(BallList* pbl);
@@ -136,20 +133,14 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 void removeFlyingBall(FlyingBallArray& fba, int index);
 bool compareDistance(Point p, Point pTrue, Point pFalse);
 void initPainting();
-Point speed(MapInfo* pmi, double position);
-void initStoredRoute(MapInfo* pmi);
-double getSpeedValue(MapInfo* pmi, double position);
 Point makePoint(double x, double y);
 void paintBallList(BallList* pbl, MapInfo* pmi);
 void paintFlyingBall(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi);
-Point route(MapInfo* pmi, double position);
 void loadMap(MapInfo* pmi, char* folder, char* mapName);
 void parseJsonInt(const cJSON* pjson, char* name, int* pInt);
 void parseJsonDouble(const cJSON* pjson, char* name, double* pDouble);
 void parseGameSettingsJson(MapInfo* pmi, const cJSON* json);
-void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 void parseBallListJson(Route* pr, const cJSON* json, char* folder, char* mapName);
-void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 void parseJsonString(const cJSON* json, char* name, char* str);
 void parseJsonPoint(const cJSON* json, char* name, Point* pPoint);
 void loadRouteFile(Route* pr, char* dir);
@@ -172,21 +163,14 @@ double routeArgle(Route* pr, int position);
 Point minus(Point a, Point b);
 void paintAllBallList(BallList* pbl, MapInfo* pmi);
 bool isZero(Point p);
-bool isNextTo(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2);
-bool isOverLapping(GameSettings* pgs, BallOnList* p1, BallOnList* p2);
-void correctOverLapping(BallList* pbl, MapInfo* pmi);
 void computeBallListPoint(BallList* pbl, MapInfo* pmi);
 void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
 void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
-bool isNextToInserting(BallList* pbl, GameSettings* pgs, BallOnList* p_ins, BallOnList* p_another);
-void computeInsertingPush(BallList* pbl, MapInfo* pmi);
-void testEndPointInsertingBall(BallList* pbl, MapInfo* pmi);
-double getR(BallOnList* p, GameSettings* pgs);
 double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2);
+void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
+void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 
 void test(MapInfo* pmi);
-
-
 
 
 extern jmp_buf env;

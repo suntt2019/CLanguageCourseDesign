@@ -1,7 +1,10 @@
 #include "zuma.h"
 
 void initPainting() {
-	initgraph(WIDTH, HEIGHT, SHOWCONSOLE);
+	if (DEBUG_OUTPUT)
+		initgraph(WIDTH, HEIGHT, SHOWCONSOLE);
+	else
+		initgraph(WIDTH, HEIGHT);
 	setfillstyle(BS_NULL);
 	return;
 }
@@ -20,11 +23,6 @@ void paintImage(MajorData* pmd) {
 	}
 	FlushBatchDraw();
 	EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
-
-	//仅供测试时使用
-	//if (pmd->ballList.firstBallPosition > 400)
-	//	pmd->ballList.firstBallPosition = 0;
-
 
 	return;
 }
@@ -84,7 +82,8 @@ void paintZuma(Zuma zuma, MapInfo* pmi) {
 void paintFlyingBall(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi) {//TODO:绘制镜像翻转的鱼（flyingball），使之眼睛朝上？
 	for (int i = 0; i < fba.size; i++) {
 		rotateAndPaint(pmi->ri.ballImgs + fba.pfb[i].color, pmi->ri.ballMaskImgs + fba.pfb[i].color, fba.pfb[i].angle, fba.pfb[i].position, true);
-		fillcircle(fba.pfb[i].position.x, fba.pfb[i].position.y, pmi->gs.ballR);
+		if(DEBUG_OUTPUT)
+			fillcircle(fba.pfb[i].position.x, fba.pfb[i].position.y, pmi->gs.ballR);
 		//floodfill(fba.pfb[i].position.x, fba.pfb[i].position.y, WHITE);
 	}
 	return;

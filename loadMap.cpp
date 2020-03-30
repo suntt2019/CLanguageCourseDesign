@@ -23,13 +23,8 @@ void loadMap(MapInfo* pmi,char* folder,char* mapName) {
 		isNEOF=fgets(mapJsonLine, JSON_LINE_MAX, fp);
 		if (isNEOF) {
 			strcat(jsonString, mapJsonLine);
-			//printf("add:%s",mapJsonLine);
 		}
 	} while (isNEOF);
-
-	//printf("ret:%s", mapJson);
-
-	
 
 	const cJSON* json = cJSON_Parse(jsonString);
 	parseGameSettingsJson(pmi, json);
@@ -205,7 +200,6 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 		}
 		i++;
 	}
-	//TODO:½âÎöimg
 	//cJSON_Delete(resourceInfoJson);
 	return;
 }

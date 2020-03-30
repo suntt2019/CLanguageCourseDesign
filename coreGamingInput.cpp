@@ -18,7 +18,8 @@ void operateMouseEvents(MajorData* pmd) {
 			launchFlyingBall(pmd->flyingBallArray, pmd->mi.ri.colorCount);
 			pmd->zuma.CDremain = pmd->mi.gs.shootingCD;
 		}
-		//printf("mouse:x=%d,y=%d,deltaX=%.2lf,deltaY=%.2lf,tanOfAngle=%.4lf,angle=%.4lf\n", mmsg.x, mmsg.y,deltaX,deltaY,tanOfAngle,zuma.angle);
+		if(DEBUG_OUTPUT>1)
+			printf("mouse:x=%d,y=%d,deltaX=%.2lf,deltaY=%.2lf,tanOfAngle=%.4lf,angle=%.4lf\n", mmsg.x, mmsg.y,deltaX,deltaY,tanOfAngle,pmd->zuma.angle);
 	}
 	return;
 }

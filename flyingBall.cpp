@@ -33,7 +33,6 @@ void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo
 
 
 void launchFlyingBall(FlyingBallArray& fba, int colorCount) {
-	//fba.pfb[fba.size - 3].launched = true;
 	generateFlyingBall(fba, colorCount);
 	return;
 }
@@ -42,7 +41,6 @@ void generateFlyingBall(FlyingBallArray& fba, int colorCount) {
 	FlyingBall newBall;
 	//有些局部变量只是为了代码看起来美观，不过牺牲了效率，emm，或许其实开优化之后都一样？
 	newBall.color = rand() % colorCount;
-	//newBall.launched = false;
 	fba.pfb[fba.size] = newBall;
 	fba.size++;
 	return;

@@ -1,10 +1,13 @@
 {
 	"gameSettings": {
-		"shootingCD": 10,
+		"shootingCD": 4,
+		"swappingCD": 2,
 		"ballR": 40,
 		"moveSpeed": 2,
 		"flySpeed": 15,
-		"beginningRushSpeed": 10
+		"beginningRushSpeed": 10,
+		"attractionPullForce": -10,
+		"insertingSpeed": 0.1
 	},
 	"mapPositionInfo": {
 		"ballListCount": 2,

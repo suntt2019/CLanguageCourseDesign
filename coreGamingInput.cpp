@@ -14,9 +14,13 @@ void operateMouseEvents(MajorData* pmd) {
 		deltaY = -(mmsg.y - pmd->zuma.position.y);
 		pmd->zuma.angle = getAngle(deltaX, deltaY);
 		
-		if (mmsg.mkLButton && pmd->zuma.CDremain == 0) {
-			launchFlyingBall(pmd->flyingBallArray, pmd->mi.ri.colorCount);
-			pmd->zuma.CDremain = pmd->mi.gs.shootingCD;
+		if (mmsg.mkLButton && pmd->zuma.shootingCD == 0) {
+			launchFlyingBall(pmd->flyingBallArray, &pmd->mi.ri);
+			pmd->zuma.shootingCD = pmd->mi.gs.shootingCD;
+		}
+		if (mmsg.mkRButton && pmd->zuma.swappingCD ==0 ) {
+			swapFlyingBall(&pmd->flyingBallArray);
+			pmd->zuma.swappingCD = pmd->mi.gs.swappingCD;
 		}
 		if(DEBUG_OUTPUT>1)
 			printf("mouse:x=%d,y=%d,deltaX=%.2lf,deltaY=%.2lf,angle=%.4lf\n", mmsg.x, mmsg.y,deltaX,deltaY,pmd->zuma.angle);

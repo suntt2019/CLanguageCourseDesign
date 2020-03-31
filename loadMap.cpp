@@ -32,7 +32,7 @@ void loadMap(MapInfo* pmi,char* folder,char* mapName) {
 	parseResourceInfoJson(pmi, json, folder, mapName);
 	//TODO:cJSON_Delete很迷，会在下一次创建cJSON的时候用到之前free的指针，导致多次free的bug
 	
-	
+	fclose(fp);
 
 	return;
 }
@@ -43,15 +43,15 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 		handleException(3);
 
 
-	int* pInts[] = { &pmi->gs.shootingCD };
-	char* nameOfInts[] = { "shootingCD" };
-	for (int i = 0; i < 1; i++)
+	int* pInts[] = { &pmi->gs.shootingCD, &pmi->gs.swappingCD };
+	char* nameOfInts[] = { "shootingCD","swappingCD" };
+	for (int i = 0; i < 2; i++)
 		parseJsonInt(gameSettingsJson, nameOfInts[i], pInts[i]);
 
 
-	double* pDoubles[] = { &pmi->gs.ballR,&pmi->gs.moveSpeed,&pmi->gs.flySpeed,&pmi->gs.beginningRushSpeed };
-	char* nameOfDoubles[] = { "ballR","moveSpeed","flySpeed","beginningRushSpeed" };
-	for (int i = 0; i < 4; i++)
+	double* pDoubles[] = { &pmi->gs.ballR,&pmi->gs.moveSpeed,&pmi->gs.flySpeed,&pmi->gs.beginningRushSpeed,&pmi->gs.insertingSpeed,&pmi->gs.attractionPullForce };
+	char* nameOfDoubles[] = { "ballR","moveSpeed","flySpeed","beginningRushSpeed","insertingSpeed", "attractionPullForce" };
+	for (int i = 0; i < 6; i++)
 		parseJsonDouble(gameSettingsJson, nameOfDoubles[i], pDoubles[i]);
 	
 	
@@ -59,9 +59,9 @@ void parseGameSettingsJson(MapInfo* pmi, const cJSON* json) {
 
 	if (DEBUG_OUTPUT) {
 		printf("\n[DEBUG_OUTPUT]parseGameSettingsJson():\n");
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < 2; i++)
 			printf("  Loaded int variable[%s]=%d  (&=%p)\n", nameOfInts[i], *pInts[i], pInts[i]);
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 6; i++)
 			printf("  Loaded double variable[%s]=%.2lf  (&=%p)\n", nameOfDoubles[i], *pDoubles[i], pDoubles[i]);
 	}
 	return;
@@ -171,6 +171,9 @@ void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* 
 	parseJsonInt(ballsJson, "colorCount", &pmi->ri.colorCount);
 	pmi->ri.ballImgs = new IMAGE[pmi->ri.colorCount];
 	pmi->ri.ballMaskImgs = new IMAGE[pmi->ri.colorCount];
+	pmi->ri.availableColorBook = (bool*)malloc(sizeof(bool) * pmi->ri.colorCount);
+	for (int i = 0; i < pmi->ri.colorCount; i++)
+		pmi->ri.availableColorBook[i] = true;
 
 	int i = 0;
 	cJSON* ballsResourceJson = cJSON_GetObjectItemCaseSensitive(ballsJson, "resource");

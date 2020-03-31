@@ -1,8 +1,6 @@
 #include "zuma.h"
-#define INSERT_PUSH_FORCE 10
-#define INSERTING_SPEED 0.05 * SQRT_3
 #define TEST_R 10
-#define ATTRACTION_PULL_FORCE -5
+
 
 void viewBallList(BallList* pbl) {
 	printf("  [viewBallList] tail=%p, pr=%p\n", pbl->tail, pbl->pr);
@@ -38,7 +36,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	pbl->tail = (BallOnList*)malloc(sizeof(BallOnList));
 	if (!pbl->tail)
 		handleException(5);
-	pbl->tail->color = rand() % pmi->ri.colorCount;
+	pbl->tail->color = generateRandomColor(&pmi->ri);
 	pbl->tail ->next = NULL;
 	pbl->tail->prev = NULL;
 	pbl->tail->position = -(pr->ballCount * 2 - 1) * pmi->gs.ballR;
@@ -52,7 +50,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 		if (!p->prev)
 			handleException(5);
 		p->prev->next = p;
-		p->prev->color = rand() % pmi->ri.colorCount;
+		p->prev->color = generateRandomColor(&pmi->ri);
 		p = p->prev;
 		p->position = -(pr->ballCount * 2 - 2*i - 1) * pmi->gs.ballR;
 		p->force = 0;
@@ -82,7 +80,7 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 	if (!p) {
 		pbl->isEmpty = true;
 		if (DEBUG_OUTPUT) {
-			printf("[DEBUG_OUTPUT]computeBallList():\n");
+			printf("\n[DEBUG_OUTPUT]computeBallList():\n");
 			printf("  ballList is empty, pbl=%p\n",pbl);
 		}
 		return;
@@ -90,9 +88,9 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 	while (p) {//推动正在插入的球插入球列
 		p->force = 0;
 		if (p->routeBias > TORLANCE)
-			p->routeBias -= INSERTING_SPEED;
+			p->routeBias -= pmi->gs.insertingSpeed * SQRT_3;
 		else if(p->routeBias < -TORLANCE)
-			p->routeBias += INSERTING_SPEED;
+			p->routeBias += pmi->gs.insertingSpeed * SQRT_3;
 		p = p->prev;
 	}
 	//TODO:函数参数轻量化（pmi => pgs 等）
@@ -141,7 +139,7 @@ void computeAttractionPull(BallList* pbl, MapInfo* pmi) {
 					printf("  removed attractLevel,p=%p\n", p);
 				}
 			}else {
-				p->force += ATTRACTION_PULL_FORCE;//TODO:放到json里
+				p->force += pmi->gs.attractionPullForce;//TODO-optional:改为非线性的
 			}
 		}
 		p = p->prev;
@@ -182,7 +180,7 @@ double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOn
 void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	if (DEBUG_OUTPUT > 1)
-		printf("[DEBUG_OUTPUT]computeBallListPoint()\n");
+		printf("\n[DEBUG_OUTPUT]computeBallListPoint()\n");
 	while (p) {
 		p->point = route(pbl->pr, p->position);
 		if (fabs(p->routeBias) > TORLANCE) {
@@ -284,7 +282,7 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 		}
 		pbol_attract = pbol_begin->prev;
 		if (DEBUG_OUTPUT) {
-			printf("[DEBUG_OUTPUT]testAchievingScore():\n");
+			printf("\n[DEBUG_OUTPUT]testAchievingScore():\n");
 			printf("  pbol_new=%p, pbol_begin=%p, pbol_end=%p, cnt=%d\n", pbol_new, pbol_begin, pbol_end, cnt);
 		}
 		//free
@@ -292,9 +290,9 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 		pbol_end->next = NULL;
 		while (p->next) {
 			p = p->next;
-			free(p->prev);
+			removeBallOnList(p->prev);
 		}
-		free(p);//TODO:检测内存泄露（静态分析工具?）
+		removeBallOnList(p);//TODO:检测内存泄露（静态分析工具?）
 		if (prevColor == nextColor && pbol_attract) {
 			if (DEBUG_OUTPUT) {
 				printf("  increased attractLevel,%d->%d,p=%p\n",
@@ -335,3 +333,7 @@ void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
 	}
 }
 
+void removeBallOnList(BallOnList* p) {
+	free(p);
+	return;
+}

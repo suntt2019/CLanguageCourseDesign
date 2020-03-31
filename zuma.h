@@ -44,7 +44,7 @@ typedef struct _Zuma {
 	Point position;
 	int thisBallColor, nextBallColor;
 	double angle;
-	int CDremain;
+	int shootingCD,swappingCD;
 }Zuma;
 
 typedef struct _FlyingBall {
@@ -59,8 +59,8 @@ typedef struct _FlyingBallArray {
 }FlyingBallArray;
 
 typedef struct _GameSettings {
-	int shootingCD;
-	double ballR, moveSpeed, flySpeed, beginningRushSpeed;
+	int shootingCD, swappingCD;
+	double ballR, moveSpeed, flySpeed, beginningRushSpeed,attractionPullForce,insertingSpeed;
 }GameSettings;
 
 typedef struct _MapPositionInfo {
@@ -69,6 +69,7 @@ typedef struct _MapPositionInfo {
 }MapPositionInfo;
 
 typedef struct _ResourceInfo {
+	bool* availableColorBook;
 	int colorCount, imgCount;
 	IMAGE* background, *zuma, *zumaMask, * imgs, * ballImgs, * ballMaskImgs;
 }ResourceInfo;
@@ -127,7 +128,7 @@ void initZuma(MajorData* pmd);
 void paintZuma(Zuma zuma, MapInfo* pmi);
 void operateMouseEvents(MajorData* pmd);
 void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi);
-void generateFlyingBall(FlyingBallArray& fba, int colorCount);
+void generateFlyingBall(FlyingBallArray& fba, ResourceInfo* pri);
 void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position, bool highQuality);
 bool isOutOfScreen(Point p);
 void justPaint(IMAGE* img, IMAGE* imgMask, Point position);
@@ -159,7 +160,7 @@ Point route(Route* pr, int index);
 void paintViewBallList(BallList* pbl, MapInfo* pmi);
 void paintViewAllBallList(BallList* pbl, MapInfo* pmi);
 void computeZuma(Zuma* pzuma);
-void launchFlyingBall(FlyingBallArray& fba, int colorCount);
+void launchFlyingBall(FlyingBallArray& fba, ResourceInfo* pri);
 double getAngle(Point p);
 double getAngle(double x, double y);
 double routeArgle(Route* pr, int position);
@@ -176,6 +177,12 @@ int gameMain();
 bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int attractionLevelBase);
 void computeAttractionPull(BallList* pbl, MapInfo* pmi);
 void viewFlyingBallArray(FlyingBallArray* pfba);
+void swapFlyingBall(FlyingBallArray* pfba);
+void removeBallOnList(BallOnList* p);
+int generateRandomColor(ResourceInfo* pri);
+bool findColorInGame(MajorData* pmd, int color);
+void upadateColorInfo(MajorData* pmd);
+void viewColorInfo(ResourceInfo* pri);
 
 void test();
 

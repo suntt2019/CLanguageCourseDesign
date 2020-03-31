@@ -8,6 +8,7 @@ void coreGaming(MajorData md) {
 	initFlyingBallArray(md.flyingBallArray, &md.mi);
 	initPainting();
 	while (!md.gameEnd) {
+		upadateColorInfo(&md);
 		operatingInput(&md);//处理玩家操作
 		computeZuma(&md.zuma);
 		computingFlyingBalls(md.flyingBallArray, md.zuma, *md.pbl, &md.mi);//计算飞出球

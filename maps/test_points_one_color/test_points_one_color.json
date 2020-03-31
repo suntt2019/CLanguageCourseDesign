@@ -50,26 +50,10 @@
 		"zuma": "zuma.jpg",
 		"zumaMask": "zuma_mask.jpg",
 		"balls": {
-			"colorCount": 5,
+			"colorCount": 1,
 			"resource": [
 				{
 					"img": "fish_0.jpg",
-					"mask": "fish_mask.jpg"
-				},
-				{
-					"img": "fish_1.jpg",
-					"mask": "fish_mask.jpg"
-				},
-				{
-					"img": "fish_2.jpg",
-					"mask": "fish_mask.jpg"
-				},
-				{
-					"img": "fish_3.jpg",
-					"mask": "fish_mask.jpg"
-				},
-				{
-					"img": "fish_4.jpg",
 					"mask": "fish_mask.jpg"
 				}
 			]

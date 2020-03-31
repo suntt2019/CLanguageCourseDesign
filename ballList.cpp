@@ -2,6 +2,7 @@
 #define INSERT_PUSH_FORCE 10
 #define INSERTING_SPEED 0.05 * SQRT_3
 #define TEST_R 10
+#define ATTRACTION_PULL_FORCE -5
 
 void viewBallList(BallList* pbl) {
 	printf("  [viewBallList] tail=%p, pr=%p\n", pbl->tail, pbl->pr);
@@ -32,6 +33,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	srand(seed);
 	pbl->pr = pr;
 	pbl->beginningRushRoundRemain = pr->beginningRushRound;
+	pbl->isEmpty = false;
 
 	pbl->tail = (BallOnList*)malloc(sizeof(BallOnList));
 	if (!pbl->tail)
@@ -42,6 +44,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	pbl->tail->position = -(pr->ballCount * 2 - 1) * pmi->gs.ballR;
 	pbl->tail->force = 0;
 	pbl->tail->routeBias = 0;
+	pbl->tail->attractLevel = 0;
 
 	BallOnList* p = pbl->tail;
 	for (int i = 1; i < pr->ballCount; i++) {
@@ -53,6 +56,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 		p = p->prev;
 		p->position = -(pr->ballCount * 2 - 2*i - 1) * pmi->gs.ballR;
 		p->force = 0;
+		p->attractLevel = 0;
 		p->routeBias = 0;
 	}
 	p->prev = NULL;
@@ -68,13 +72,22 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 
 void computeAllBallList(BallList* pbl, MapInfo* pmi) {
 	for (int i = 0; i < pmi->mpi.ballListCount; i++)
-		computeBallList(pbl + i, pmi);
+		if(!(pbl+i)->isEmpty)
+			computeBallList(pbl + i, pmi);
 	return;
 }
 
 void computeBallList(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
-	while (p) {
+	if (!p) {
+		pbl->isEmpty = true;
+		if (DEBUG_OUTPUT) {
+			printf("[DEBUG_OUTPUT]computeBallList():\n");
+			printf("  ballList is empty, pbl=%p\n",pbl);
+		}
+		return;
+	}
+	while (p) {//推动正在插入的球插入球列
 		p->force = 0;
 		if (p->routeBias > TORLANCE)
 			p->routeBias -= INSERTING_SPEED;
@@ -86,6 +99,7 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 
 	computeBeginningRush(pbl,pmi);
 	computeNormalPush(pbl, pmi);
+	computeAttractionPull(pbl, pmi);
 
 	applyForceToPosition(pbl,pmi);
 	computeBallListPoint(pbl, pmi);
@@ -110,13 +124,38 @@ void computeNormalPush(BallList* pbl, MapInfo* pmi) {
 	return;
 }
 
+void computeAttractionPull(BallList* pbl, MapInfo* pmi) {
+	BallOnList* p = pbl->tail;
+	while (p) {
+		if (p->next && p->attractLevel) {
+			if (getGapBetweenBOL(pbl, &pmi->gs, p, p->next) <= TORLANCE) {
+				if (testAchievingScore(pbl,pmi, p, p->attractLevel)) {
+					computeAttractionPull(pbl, pmi);
+					return;
+				}else {
+					p->attractLevel = 0;
+				}
+				//if
+				if (DEBUG_OUTPUT) {
+					printf("\n[DEBUG_OUTPUT]computeAttractionPull():\n");
+					printf("  removed attractLevel,p=%p\n", p);
+				}
+			}else {
+				p->force += ATTRACTION_PULL_FORCE;//TODO:放到json里
+			}
+		}
+		p = p->prev;
+	}
+	return;
+}
+
 void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	double overLappingDistance;
 	if (!p)
 		handleException(6);
 	while (p->prev) {
-		if (getGapBetweenBOL(pbl, &pmi->gs,p,p->prev))//如果两球相邻
+		if (getGapBetweenBOL(pbl, &pmi->gs, p, p->prev) <= TORLANCE)//如果两球相邻
 			p->prev->force += p->force;
 		p->position += p->force;
 		
@@ -161,9 +200,9 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 	return;
 }
 
-void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi) {
+//TODO:想办法让这个函数的参数数量少一点
+void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi,bool crashPrev) {
 	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
-	BallOnList* q;
 	if (!p) { 
 		handleException(5);
 		return;
@@ -172,6 +211,7 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 	p->prev = pbol_prev;
 	p->next = pbol_next;
 	p->force = 0;
+	p->attractLevel = 0;
 
 	if (!pbol_prev) {
 		p->position = pbol_next->position + pmi->gs.ballR;
@@ -183,10 +223,17 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 		pbol_prev->next = p;
 	}
 	else {
-		p->position = (pbol_prev->position+pbol_next->position)/2;
+		if (getGapBetweenBOL(pbl, &pmi->gs, pbol_prev, pbol_next) > pmi->gs.ballR * 2 - TORLANCE) {
+			if (crashPrev)
+				p->position = pbol_prev->position - pmi->gs.ballR;
+			else
+				p->position = pbol_next->position + pmi->gs.ballR;
+		}else {
+			p->position = (pbol_prev->position + pbol_next->position) / 2;
+		}
+		
 		pbol_prev->next = p;
 		pbol_next->prev = p;
-		q = pbol_prev;
 	}
 	//judge
 	p->point = route(pbl->pr,(int)p->position);
@@ -194,11 +241,75 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 		p->point.y + sin(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R);
 	Point p2 = makePoint(p->point.x + cos(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R,
 		p->point.y - sin(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R);
-	p->routeBias = compareDistance(fba.pfb[index].position, p1, p2) ? -SQRT_3 : SQRT_3;//TODO:改成根据flyingball消失的位置计算bias
+	p->routeBias = compareDistance(fba.pfb[index].position, p1, p2) ? -SQRT_3 : SQRT_3;
+	//TODO:改成根据flyingball消失的位置计算bias
 	
+
+	testAchievingScore(pbl,pmi,p,0);
 	removeFlyingBall(fba, index);
 	return;
 }
+
+bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int attractionLevelBase) {
+	bool returnValue = false;
+	int cnt = 1,prevColor,nextColor;
+	BallOnList* pbol_begin = pbol_new;
+	BallOnList* pbol_end = pbol_new;
+	BallOnList* p, *pbol_attract=NULL;
+	while (pbol_begin->prev && pbol_begin->prev->color == pbol_new->color
+		&& getGapBetweenBOL(pbl, &pmi->gs, pbol_begin->prev, pbol_begin) <= TORLANCE){
+		pbol_begin = pbol_begin->prev;
+		cnt++;
+	}
+	while (pbol_end->next && pbol_end->next->color == pbol_new->color
+		&& getGapBetweenBOL(pbl, &pmi->gs, pbol_end->next, pbol_end) <= TORLANCE) {
+		pbol_end = pbol_end->next;
+		cnt++;
+	}
+	if (cnt >= 3) {
+		if (pbol_begin->prev) {
+			pbol_begin->prev->next = pbol_end->next;
+			prevColor = pbol_begin->prev->color;
+		}
+		else {
+			prevColor = NULL_COLOR;
+		}
+		if (pbol_end->next) {
+			pbol_end->next->prev = pbol_begin->prev;
+			nextColor = pbol_end->next->color;
+		}
+		else {
+			pbl->tail = pbol_begin->prev;
+			nextColor = NULL_COLOR;
+		}
+		pbol_attract = pbol_begin->prev;
+		if (DEBUG_OUTPUT) {
+			printf("[DEBUG_OUTPUT]testAchievingScore():\n");
+			printf("  pbol_new=%p, pbol_begin=%p, pbol_end=%p, cnt=%d\n", pbol_new, pbol_begin, pbol_end, cnt);
+		}
+		//free
+		p = pbol_begin;
+		pbol_end->next = NULL;
+		while (p->next) {
+			p = p->next;
+			free(p->prev);
+		}
+		free(p);//TODO:检测内存泄露（静态分析工具?）
+		if (prevColor == nextColor && pbol_attract) {
+			if (DEBUG_OUTPUT) {
+				printf("  increased attractLevel,%d->%d,p=%p\n",
+					pbol_attract->attractLevel, attractionLevelBase + 1, p);
+			}
+			pbol_attract->attractLevel = attractionLevelBase + 1;
+		}
+		returnValue = true;
+	}
+	
+	
+	
+	return returnValue;
+}
+
 
 //TODO:用函数指针把这些all整合成一个
 void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
@@ -215,9 +326,9 @@ void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
 				(p->position > pmi->gs.ballR * 2 ? 
 					route(pbl->pr,(int)(p->position - pmi->gs.ballR * 2)) : route(pbl->pr,0)),
 				route(pbl->pr,(int)(p->position + pmi->gs.ballR * 2))))
-				insertBallList(pbl, p->prev, p, fba, index, pmi);
+				insertBallList(pbl, p->prev, p, fba, index, pmi,false);
 			else
-				insertBallList(pbl, p, p->next, fba, index, pmi);
+				insertBallList(pbl, p, p->next, fba, index, pmi,true);
 			break;
 		}
 		p = p->prev;

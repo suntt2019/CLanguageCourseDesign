@@ -24,8 +24,9 @@ void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo
 		fba.pfb[i].position.y -= pmi->gs.flySpeed * sin(fba.pfb[i].angle);
 		if (isOutOfScreen(fba.pfb[i].position)) {
 			removeFlyingBall(fba, i);
+		}else {
+			 testCrashAll(&bl, fba, i, pmi);
 		}
-		testCrashAll(&bl, fba, i, pmi);
 	}
 
 	return;
@@ -55,3 +56,10 @@ void removeFlyingBall(FlyingBallArray& fba, int index) {
 }
 
 
+void viewFlyingBallArray(FlyingBallArray* pfba) {
+	printf("  viewFlyingBallArray():\n");
+	for (int i = 0; i < pfba->size; i++) {
+		printf("    flyingBall#%d: position:(%.2lf,%.2lf),color:%d,angle:%.2lf\n",
+			i,pfba->pfb[i].position.x, pfba->pfb[i].position.y, pfba->pfb[i].color, pfba->pfb[i].angle);
+	}
+}

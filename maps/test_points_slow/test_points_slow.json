@@ -2,7 +2,7 @@
 	"gameSettings": {
 		"shootingCD": 10,
 		"ballR": 40,
-		"moveSpeed": 2,
+		"moveSpeed": 0.1,
 		"flySpeed": 15,
 		"beginningRushSpeed": 10
 	},
@@ -11,7 +11,7 @@
 		"ballLists": [
 			{
 				"ballCount": 3,
-				"beginningRushRound": 20,
+				"beginningRushRound": 40,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route.zroute",
@@ -21,7 +21,7 @@
 			},
 			{
 				"ballCount": 5,
-				"beginningRushRound": 20,
+				"beginningRushRound": 60,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route2.zroute",

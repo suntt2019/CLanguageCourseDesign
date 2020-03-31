@@ -23,8 +23,9 @@
 
 #define FLYING_BALL_ARRAY_SIZE 100
 
+#define NULL_COLOR -1
 
-#define DEBUG_OUTPUT 0
+#define DEBUG_OUTPUT 1
 #define TORLANCE 0.01
 
 typedef struct _Point {
@@ -80,7 +81,7 @@ typedef struct _Route {
 
 typedef struct _BallOnList {
 	double position, force;
-	int color;
+	int color, attractLevel;
 	bool isInserting;
 	double routeBias;
 	Point point;
@@ -93,6 +94,7 @@ typedef struct _BallList {
 	BallOnList* tail;
 	Route* pr;
 	int beginningRushRoundRemain;
+	bool isEmpty;
 }BallList;
 
 typedef struct _MapInfo {
@@ -130,7 +132,7 @@ void rotateAndPaint(IMAGE* img, IMAGE* imgMask, double angle, Point position, bo
 bool isOutOfScreen(Point p);
 void justPaint(IMAGE* img, IMAGE* imgMask, Point position);
 bool testPointDistance(Point p1, Point p2, double minD);
-void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi);
+void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi, bool crashPrev);
 void removeFlyingBall(FlyingBallArray& fba, int index);
 bool compareDistance(Point p, Point pTrue, Point pFalse);
 void initPainting();
@@ -171,6 +173,9 @@ double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOn
 void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 int gameMain();
+bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int attractionLevelBase);
+void computeAttractionPull(BallList* pbl, MapInfo* pmi);
+void viewFlyingBallArray(FlyingBallArray* pfba);
 
 void test();
 

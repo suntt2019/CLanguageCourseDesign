@@ -1,12 +1,12 @@
 {
 	"gameSettings": {
-		"shootingCD": 4,
-		"swappingCD": 2,
+		"shootingCD": 15,
+		"swappingCD": 10,
 		"ballR": 40,
-		"moveSpeed": 0.1,
-		"flySpeed": 15,
-		"beginningRushSpeed": 10,
-		"attractionPullForce": -4,
+		"moveSpeed": 0.05,
+		"flySpeed": 10,
+		"beginningRushSpeed": 6,
+		"attractionPullForce": -6,
 		"insertingSpeed": 0.1
 	},
 	"mapPositionInfo": {
@@ -14,7 +14,7 @@
 		"ballLists": [
 			{
 				"ballCount": 3,
-				"beginningRushRound": 40,
+				"beginningRushRound": 80,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route.zroute",
@@ -24,7 +24,7 @@
 			},
 			{
 				"ballCount": 5,
-				"beginningRushRound": 60,
+				"beginningRushRound": 100,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route2.zroute",
@@ -83,7 +83,7 @@
 
 			]
 		}
-		
+
 	}
 
 }

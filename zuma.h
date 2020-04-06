@@ -183,6 +183,13 @@ int generateRandomColor(ResourceInfo* pri);
 bool findColorInGame(MajorData* pmd, int color);
 void upadateColorInfo(MajorData* pmd);
 void viewColorInfo(ResourceInfo* pri);
+void gameover(bool isVectory);
+bool checkIfGameover(MapInfo* pmi, BallList* pbl);
+bool checkIfBallListEmpty(BallList* pbl);
+void computeAllBallListPoint(BallList* pbl, MapInfo* pmi);
+bool checkIfBallListOverFlow(BallList* pbl);
+
+
 
 void test();
 

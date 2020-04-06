@@ -6,9 +6,10 @@
 Point route(Route* pr, int position) {
 	if (position < 0)
 		return makePoint(NEGTIVE_ROUTE_POINT_X, NEGTIVE_ROUTE_POINT_Y);
-	if (position >= pr->pointCount)
+	if (position >= pr->pointCount)//TODO:pointCount*pointStep?   （启用pointStep）
 		handleException(7);
 	return pr->pointArray[position];//这里下标越界，还没做gameover判定，所以这里exception是正常情况
+	
 }
 
 double routeArgle(Route* pr, int position) {

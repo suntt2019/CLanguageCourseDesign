@@ -77,14 +77,10 @@ void computeAllBallList(BallList* pbl, MapInfo* pmi) {
 
 void computeBallList(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
-	if (!p) {
-		pbl->isEmpty = true;
-		if (DEBUG_OUTPUT) {
-			printf("\n[DEBUG_OUTPUT]computeBallList():\n");
-			printf("  ballList is empty, pbl=%p\n",pbl);
-		}
+	if (checkIfBallListEmpty(pbl))
 		return;
-	}
+
+	//TODO:将下面这一块封装成函数
 	while (p) {//推动正在插入的球插入球列
 		p->force = 0;
 		if (p->routeBias > TORLANCE)
@@ -93,20 +89,37 @@ void computeBallList(BallList* pbl, MapInfo* pmi) {
 			p->routeBias += pmi->gs.insertingSpeed * SQRT_3;
 		p = p->prev;
 	}
+
 	//TODO:函数参数轻量化（pmi => pgs 等）
 
 	computeBeginningRush(pbl,pmi);
 	computeNormalPush(pbl, pmi);
 	computeAttractionPull(pbl, pmi);
 
+	if (checkIfBallListEmpty(pbl))
+		return;
+
 	applyForceToPosition(pbl,pmi);
-	computeBallListPoint(pbl, pmi);
+	
 
 	if (DEBUG_OUTPUT > 1) {
 		viewBallList(pbl);
 	}
 
 	return;
+}
+
+bool checkIfBallListEmpty(BallList* pbl) {
+	if (!pbl->tail) {
+		pbl->isEmpty = true;
+		if (DEBUG_OUTPUT) {
+			printf("\n[DEBUG_OUTPUT]checkIfBallListEmpty():\n");
+			printf("  ballList is empty, pbl=%p\n", pbl);
+		}
+		return true;
+	}else {
+		return false;
+	}
 }
 
 void computeBeginningRush(BallList* pbl, MapInfo* pmi) {
@@ -151,7 +164,7 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	double overLappingDistance;
 	if (!p)
-		handleException(6);
+		handleException(6);//在调用这个函数之前加了判断，理论上不会出现这种情况了
 	while (p->prev) {
 		if (getGapBetweenBOL(pbl, &pmi->gs, p, p->prev) <= TORLANCE)//如果两球相邻
 			p->prev->force += p->force;
@@ -175,6 +188,13 @@ void applyForceToPosition(BallList* pbl, MapInfo* pmi) {
 
 double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2) {
 	return fabs(p1->position - p2->position) - pgs->ballR * sqrt(4 - pow(p1->routeBias - p2->routeBias, 2));
+}
+
+
+void computeAllBallListPoint(BallList* pbl, MapInfo* pmi) {
+	for (int i = 0; i < pmi->mpi.ballListCount; i++)
+		computeBallListPoint(pbl+i, pmi);
+	return;
 }
 
 void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
@@ -233,6 +253,14 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 		pbol_prev->next = p;
 		pbol_next->prev = p;
 	}
+	if (checkIfBallListOverFlow(pbl)) {
+		if(pbol_next)
+			pbol_next->prev = pbol_prev;
+		if(pbol_prev)
+			pbol_prev->next = pbol_next;
+		removeBallOnList(p);
+		return;
+	}
 	//judge
 	p->point = route(pbl->pr,(int)p->position);
 	Point p1 = makePoint(p->point.x - cos(routeArgle(pbl->pr, p->position) + PI / 2) * TEST_R,
@@ -246,6 +274,20 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 	testAchievingScore(pbl,pmi,p,0);
 	removeFlyingBall(fba, index);
 	return;
+}
+
+
+bool checkIfBallListOverFlow(BallList* pbl) {
+	bool ret = false;
+	BallOnList* p = pbl->tail;
+	while (p) {
+		if (p->position >= pbl->pr->pointCount) {
+			ret = true;
+			break;
+		}
+		p = p->prev;
+	}
+	return ret;
 }
 
 bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int attractionLevelBase) {
@@ -320,10 +362,17 @@ void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
 	BallOnList* p = pbl->tail;
 	while (p) {
 		if (testPointDistance(p->point, fba.pfb[index].position, pmi->gs.ballR * 2)) {
-			if (compareDistance(fba.pfb[index].position,
+			if (compareDistance(
+
+				fba.pfb[index].position,
+
 				(p->position > pmi->gs.ballR * 2 ? 
 					route(pbl->pr,(int)(p->position - pmi->gs.ballR * 2)) : route(pbl->pr,0)),
-				route(pbl->pr,(int)(p->position + pmi->gs.ballR * 2))))
+
+				(p->position < pbl->pr->pointCount - pmi->gs.ballR * 2 ?
+					route(pbl->pr,(int)(p->position + pmi->gs.ballR * 2)) : route(pbl->pr, 0))
+
+				))
 				insertBallList(pbl, p->prev, p, fba, index, pmi,false);
 			else
 				insertBallList(pbl, p, p->next, fba, index, pmi,true);

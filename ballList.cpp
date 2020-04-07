@@ -1,6 +1,7 @@
 #include "zuma.h"
 #define TEST_R 10
-
+#define SCORE_REMOVE_BALL 10
+#define SCORE_ACHIEVE_MORE_THAN_3 20
 
 void viewBallList(BallList* pbl) {
 	printf("  [viewBallList] tail=%p, pr=%p\n", pbl->tail, pbl->pr);
@@ -32,11 +33,13 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	pbl->pr = pr;
 	pbl->beginningRushRoundRemain = pr->beginningRushRound;
 	pbl->isEmpty = false;
+	pbl->score = 0;
+	pbl->latestRemovedBallPosition = 0;
 
 	pbl->tail = (BallOnList*)malloc(sizeof(BallOnList));
 	if (!pbl->tail)
 		handleException(5);
-	pbl->tail->color = generateRandomColor(&pmi->ri);
+	pbl->tail->color = getBallColor(&pmi->ri,pbl->pr,0);
 	pbl->tail ->next = NULL;
 	pbl->tail->prev = NULL;
 	pbl->tail->position = -(pr->ballCount * 2 - 1) * pmi->gs.ballR;
@@ -50,7 +53,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 		if (!p->prev)
 			handleException(5);
 		p->prev->next = p;
-		p->prev->color = generateRandomColor(&pmi->ri);
+		p->prev->color = getBallColor(&pmi->ri, pbl->pr, i);
 		p = p->prev;
 		p->position = -(pr->ballCount * 2 - 2*i - 1) * pmi->gs.ballR;
 		p->force = 0;
@@ -67,6 +70,35 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 
 	return;
 }
+
+
+int getBallColor(ResourceInfo* pri,Route* pr,int index) {
+	int ret = -1;
+	static int lastColor;
+	printf("%s\n", pr->generatingBallMethod);
+	if (strcmp(pr->generatingBallMethod, "random") == 0) {
+		ret = generateRandomColor(pri);
+	}else if (strcmp(pr->generatingBallMethod, "probability") == 0) {
+		if (index == 0 || (rand() % pr->probability) > 0) {
+			ret = generateRandomColor(pri);
+			lastColor = ret;
+		}else {
+			ret = lastColor;
+		}
+	}else if (strcmp(pr->generatingBallMethod, "fixed") == 0) {
+		if (0 <= index && index < pr->ballCount)
+			ret = pr->ballListOrderArray[pr->ballCount-1-index];
+		else
+			handleException(12);
+	}else {
+		handleException(9);
+	}
+
+	if (ret < 0)
+		handleException(8);
+	return ret;
+}
+
 
 void computeAllBallList(BallList* pbl, MapInfo* pmi) {
 	for (int i = 0; i < pmi->mpi.ballListCount; i++)
@@ -258,7 +290,7 @@ void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next,
 			pbol_next->prev = pbol_prev;
 		if(pbol_prev)
 			pbol_prev->next = pbol_next;
-		removeBallOnList(p);
+		removeBallOnList(pbl,p);
 		return;
 	}
 	//judge
@@ -327,14 +359,15 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 			printf("\n[DEBUG_OUTPUT]testAchievingScore():\n");
 			printf("  pbol_new=%p, pbol_begin=%p, pbol_end=%p, cnt=%d\n", pbol_new, pbol_begin, pbol_end, cnt);
 		}
+		pbl->score += SCORE_ACHIEVE_MORE_THAN_3 * (cnt - 3);
 		//free
 		p = pbol_begin;
 		pbol_end->next = NULL;
 		while (p->next) {
 			p = p->next;
-			removeBallOnList(p->prev);
+			removeBallOnList(pbl,p->prev);
 		}
-		removeBallOnList(p);//TODO:¼ì²âÄÚ´æÐ¹Â¶£¨¾²Ì¬·ÖÎö¹¤¾ß?£©
+		removeBallOnList(pbl,p);//TODO:¼ì²âÄÚ´æÐ¹Â¶£¨¾²Ì¬·ÖÎö¹¤¾ß?£©
 		if (prevColor == nextColor && pbol_attract) {
 			if (DEBUG_OUTPUT) {
 				printf("  increased attractLevel,%d->%d,p=%p\n",
@@ -382,7 +415,9 @@ void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
 	}
 }
 
-void removeBallOnList(BallOnList* p) {
+void removeBallOnList(BallList* pbl,BallOnList* p) {
+	pbl->score += SCORE_REMOVE_BALL;
+	pbl->latestRemovedBallPosition = p->position;
 	free(p);
 	return;
 }

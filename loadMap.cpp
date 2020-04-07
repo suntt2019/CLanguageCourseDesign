@@ -1,8 +1,6 @@
 #include "zuma.h"
 
-#define JSON_MAX 10000
-#define JSON_LINE_MAX 1000
-#define STRING_BUFFER_SIZE 1000
+
 
 void loadMap(MapInfo* pmi,char* folder,char* mapName) {
 	if (DEBUG_OUTPUT)
@@ -111,6 +109,9 @@ void parseBallListJson(Route* pr,const cJSON* json,char* folder,char* mapName) {
 
 	parseJsonInt(json, "ballCount", &pr->ballCount);
 	
+	parseGeneratingBallMethod(pr,json,folder,mapName);
+	
+
 	double* pDoubles[] = { &pr->beginningRushRound };
 	char* nameOfDoubles[] = { "beginningRushRound" };
 	for (int i = 0; i < 1; i++)
@@ -145,6 +146,37 @@ void parseBallListJson(Route* pr,const cJSON* json,char* folder,char* mapName) {
 
 	return;
 }
+
+
+void parseGeneratingBallMethod(Route* pr, const cJSON* json, char* folder, char* mapName) {
+	parseJsonString(json, "generatingBallMethod", pr->generatingBallMethod);//TODO:Ìí¼ÓDEBUG_OUTPUT
+	if (strcmp(pr->generatingBallMethod, "probability") == 0) {
+		parseJsonInt(json, "sameBallProbability", &pr->probability);
+		if (pr->probability == 0)
+			handleException(10);
+	}else if (strcmp(pr->generatingBallMethod, "fixed") == 0) {
+		char orderFileName[STRING_BUFFER_SIZE];
+		char orderFileDir[STRING_BUFFER_SIZE];
+		parseJsonString(json, "ballListOrderFile", orderFileName);
+		sprintf(orderFileDir, "%s\\%s\\%s", folder, mapName, orderFileName);
+		FILE* fp = fopen(orderFileDir, "r");
+		if (!fp)
+			handleException(11);
+		pr->ballListOrderArray = (int*)malloc(sizeof(int) * pr->ballCount);
+		if (!pr->ballListOrderArray)
+			handleException(5);
+		for (int i = 0; i < pr->ballCount; i++) {
+			if (fscanf(fp, "%d",pr->ballListOrderArray+i) != 1)
+				handleException(2);
+		}
+	}else if (strcmp(pr->generatingBallMethod, "random") == 0) {
+		;
+	}else {
+		handleException(9);
+	}
+	return;
+}
+
 
 void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName) {
 	cJSON* resourceInfoJson = cJSON_GetObjectItemCaseSensitive(json, "resourceInfo");

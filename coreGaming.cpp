@@ -33,7 +33,7 @@ bool checkIfGameover(MapInfo* pmi,BallList* pbl) {
 		}
 	}
 	if (isVectory) {
-		gameover(true);
+		gameover(true,pbl,pmi);
 		return true;
 	}
 	//test if lose
@@ -45,16 +45,52 @@ bool checkIfGameover(MapInfo* pmi,BallList* pbl) {
 		}
 	}
 	if (isLose) {
-		gameover(false);
+		gameover(false,pbl,pmi);
 		return true;
 	}
 	return false;
 }
 
-void gameover(bool isVectory) {
+void gameover(bool isVectory,BallList* pbl,MapInfo* pmi) {
+	putimage(0, 0, pmi->ri.background);
+	if (DEBUG_OUTPUT) {
+		for (int i = 0; i < pmi->mpi.ballListCount; i++)
+			viewRoute(pmi->pr + i);
+		paintViewAllBallList(pbl, pmi);
+	}
+	settleScore(isVectory, pbl, pmi);
 	if (isVectory)
-		outtextxy(100, 100, "YOU WIN");
+		outtextxy(20, 100, "YOU WIN");
 	else
-		outtextxy(100, 100, "YOU LOSE");
+		outtextxy(20, 100, "YOU LOSE");
+	if (DEBUG_OUTPUT) {
+		char stringBuffer[STRING_BUFFER_SIZE];
+		for (int i = 0; i < pmi->mpi.ballListCount; i++) {
+			sprintf(stringBuffer, "score-%d: %d", i, pbl[i].score);
+			outtextxy(20, 20 + i * 16, stringBuffer);
+		}
+	}
 	return;
+}
+
+void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi) {
+	bool finishedRouteRemainScore = false;
+	if (isVectory) {
+		while (!finishedRouteRemainScore) {
+			finishedRouteRemainScore = true;
+			for (int i = 0; i < pmi->mpi.ballListCount; i++) {
+				if (pbl[i].latestRemovedBallPosition >= pbl[i].pr->pointCount - 100)
+					continue;
+				finishedRouteRemainScore = false;
+				outtextxy(minus(route(pbl[i].pr, pbl[i].latestRemovedBallPosition), makePoint(0, 0)), "+100");
+				pbl[i].score += 100;
+				pbl[i].latestRemovedBallPosition += 100;
+				Sleep(10);
+				//TODO:添加音效和更好的加分展示效果
+			}
+			Sleep(200);
+		}
+	}
+	
+	
 }

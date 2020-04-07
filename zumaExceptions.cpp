@@ -11,7 +11,12 @@ int handleException(int exceptionCode) {
 		"unknow storing method",
 		"malloc exception",//5
 		"TODO:Fix this situation",
-		"Points Index Out of Bounds(有可能是预期中的excetion，因为尚未完成gameover判定)",
+		"Points Index Out of Bounds",
+		"Fail to get ball color",
+		"Unknow generating ball method",
+		"sameBallProbability can't be 0 (because it's a denominator)",//10
+		"zorder file not found",
+		"Fixed ball order index out of bounds",
 		//TODO:错误代码改进，改进为分部分的
 
 
@@ -34,6 +39,8 @@ int handleException(int exceptionCode) {
 		printf("[[Zuma Excption]] ended without exception.\n");
 		if(DEBUG_OUTPUT)
 			system("pause");
+		else
+			Sleep(10000);
 		return returnValue;
 	}
 }

@@ -1,6 +1,6 @@
 #include "zuma.h"
-#define NEGTIVE_ROUTE_POINT_X 300
-#define NEGTIVE_ROUTE_POINT_Y 300
+#define NEGTIVE_ROUTE_POINT_X -300
+#define NEGTIVE_ROUTE_POINT_Y -300
 #define NEGTIVE_ROUTE_ANGLE 0
 
 Point route(Route* pr, int position) {

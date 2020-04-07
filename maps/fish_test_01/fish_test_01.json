@@ -2,22 +2,19 @@
 	"gameSettings": {
 		"shootingCD": 15,
 		"swappingCD": 10,
-		"ballR": 40,
-		"moveSpeed": 0.5,
-		"flySpeed": 10,
-		"beginningRushSpeed": 6,
-		"attractionPullForce": -6,
-		"insertingSpeed": 0.1
+		"ballR": 20,
+		"moveSpeed": 0.12,
+		"flySpeed": 5,
+		"beginningRushSpeed": 3,
+		"attractionPullForce": -3,
+		"insertingSpeed": 0.04
 	},
 	"mapPositionInfo": {
 		"ballListCount": 2,
 		"ballLists": [
 			{
 				"ballCount": 5,
-				"generatingBallMethod": "probability",
-				"sameBallProbability": 2,
-				"ballListOrderFile": "fbo.zorder",
-				"beginningRushRound": 60,
+				"beginningRushRound": 100,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route.zroute",
@@ -26,10 +23,8 @@
 				}
 			},
 			{
-				"ballCount": 5,
-				"generatingBallMethod": "probability",
-				"sameBallProbability": 3,
-				"beginningRushRound": 50,
+				"ballCount": 10,
+				"beginningRushRound": 80,
 				"routeStoringMethod": "STORE_BY_POINTS",
 				"routeInfo": {
 					"routeFileName": "route2.zroute",
@@ -41,15 +36,15 @@
 		"zuma": {
 			"zumaPosition": {
 				"x": 600,
-				"y": 400
+				"y": 300
 			},
 			"deltaMouthPosition": {
-				"x": 20,
-				"y": 130
+				"x": 10,
+				"y": 65
 			},
 			"deltaHolePosition": {
-				"x": 10,
-				"y": -20
+				"x": 5,
+				"y": -10
 			}
 		}
 	},

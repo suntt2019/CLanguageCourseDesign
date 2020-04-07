@@ -17,3 +17,8 @@ void justPaint(IMAGE* img, IMAGE* imgMask, Point position) {
 	putimage(position.x - img->getwidth() / 2, position.y - img->getheight() / 2, img, SRCINVERT);
 	return;
 }
+
+void outtextxy(Point p, LPCTSTR str) {
+	outtextxy(p.x, p.y, str);
+	return;
+}

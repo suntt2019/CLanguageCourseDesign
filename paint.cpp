@@ -6,6 +6,7 @@ void initPainting() {
 	else
 		initgraph(WIDTH, HEIGHT);
 	setfillstyle(BS_NULL);
+	setaspectratio(1, 1);
 	return;
 }
 
@@ -55,15 +56,19 @@ void paintBallList(BallList* pbl, MapInfo* pmi) {
 
 void paintViewAllBallList(BallList* pbl, MapInfo* pmi) {
 	for (int i = 0; i < pmi->mpi.ballListCount; i++)
-		paintViewBallList(pbl+i, pmi);
+		paintViewBallList(pbl+i, pmi,i);
 	return;
 }
 
-void paintViewBallList(BallList* pbl,MapInfo* pmi) {
+void paintViewBallList(BallList* pbl,MapInfo* pmi,int index) {
 	BallOnList* p = pbl->tail;
 	Point point;
+	char stringBuffer[STRING_BUFFER_SIZE];
+	sprintf(stringBuffer, "score-%d: %d", index, pbl->score);
+	outtextxy(20, 20 + index * 16, stringBuffer);
+	point = route(pbl->pr, pbl->latestRemovedBallPosition);
+	fillcircle(point.x, point.y, pmi->gs.ballR/3);
 	while (p) {
-		point = route(pbl->pr, (int)p->position);
 		fillcircle(p->point.x,p->point.y, pmi->gs.ballR);
 		if(fabs(p->routeBias)>TORLANCE)
 			fillcircle(p->point.x, p->point.y, pmi->gs.ballR+2);

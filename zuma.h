@@ -12,7 +12,7 @@
 #define PI 3.14159269
 #define SQRT_3 1.7320508
 
-#define WIDTH 1200
+#define WIDTH 1000
 #define HEIGHT 600
 
 #define STORE_BY_POINTS 0
@@ -22,6 +22,12 @@
 #define UNKNOWN_STORING_METHOD -3
 
 #define FLYING_BALL_ARRAY_SIZE 100
+
+#define JSON_MAX 10000
+#define JSON_LINE_MAX 1000
+#define STRING_BUFFER_SIZE 500
+
+
 
 #define NULL_COLOR -1
 
@@ -78,6 +84,9 @@ typedef struct _Route {
 	int ballCount, pointCount, pointStep;
 	double beginningRushRound;
 	Point* pointArray;
+	char generatingBallMethod[20];
+	int probability;
+	int* ballListOrderArray;
 }Route;
 
 typedef struct _BallOnList {
@@ -96,6 +105,7 @@ typedef struct _BallList {
 	Route* pr;
 	int beginningRushRoundRemain;
 	bool isEmpty;
+	int score, latestRemovedBallPosition;
 }BallList;
 
 typedef struct _MapInfo {
@@ -178,18 +188,21 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 void computeAttractionPull(BallList* pbl, MapInfo* pmi);
 void viewFlyingBallArray(FlyingBallArray* pfba);
 void swapFlyingBall(FlyingBallArray* pfba);
-void removeBallOnList(BallOnList* p);
+void removeBallOnList(BallList* pbl, BallOnList* p);
 int generateRandomColor(ResourceInfo* pri);
 bool findColorInGame(MajorData* pmd, int color);
 void upadateColorInfo(MajorData* pmd);
 void viewColorInfo(ResourceInfo* pri);
-void gameover(bool isVectory);
+void gameover(bool isVectory, BallList* pbl, MapInfo* pmi);
 bool checkIfGameover(MapInfo* pmi, BallList* pbl);
 bool checkIfBallListEmpty(BallList* pbl);
 void computeAllBallListPoint(BallList* pbl, MapInfo* pmi);
 bool checkIfBallListOverFlow(BallList* pbl);
-
-
+int getBallColor(ResourceInfo* pri, Route* pr, int index);
+void parseGeneratingBallMethod(Route* pr, const cJSON* json, char* folder, char* mapName);
+void paintViewBallList(BallList* pbl, MapInfo* pmi, int index);
+void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi);
+void outtextxy(Point p, LPCTSTR str);
 
 void test();
 

@@ -203,6 +203,11 @@ void parseGeneratingBallMethod(Route* pr, const cJSON* json, char* folder, char*
 void paintViewBallList(BallList* pbl, MapInfo* pmi, int index);
 void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi);
 void outtextxy(Point p, LPCTSTR str);
+void demo2();
+
+
+
+
 
 void test();
 

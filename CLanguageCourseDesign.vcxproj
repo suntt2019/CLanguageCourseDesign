@@ -33,6 +33,7 @@
     <ClCompile Include="coreGaming.cpp" />
     <ClCompile Include="coreGamingInput.cpp" />
     <ClCompile Include="demo1.cpp" />
+    <ClCompile Include="demo2.cpp" />
     <ClCompile Include="flyingBall.cpp" />
     <ClCompile Include="loadMap.cpp" />
     <ClCompile Include="main.cpp" />

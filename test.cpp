@@ -57,13 +57,15 @@ void test() {
 	}
 	*/
 	
-	IMAGE mainBackground, level;
-	loadimage(&mainBackground, "image\\main_background3.jpg",WIDTH,HEIGHT,true);
-	loadimage(&level, "image\\main_background3_dark.jpg",WIDTH, HEIGHT, true);
+	IMAGE mainBackground, mainBackgroundDark,logo,logoMask;
+	loadimage(&mainBackground, "image\\main_background_with_logo.jpg",WIDTH,HEIGHT,true);
+	loadimage(&mainBackgroundDark, "image\\main_background3_dark.jpg",WIDTH, HEIGHT, true);
 	
 
 	initFLBG(&mainBackground);
-	loadimage(&mainBackground, "image\\main_background3.jpg", WIDTH, HEIGHT, true);
+	loadimage(&mainBackground, "image\\main_background_with_logo.jpg", WIDTH, HEIGHT, true);
+	loadimage(&logo, "image\\logo.jpg", WIDTH/2, HEIGHT/2, true);
+	loadimage(&logoMask, "image\\logo_mask.jpg", WIDTH / 2, HEIGHT / 2, true);
 	setbkmode(TRANSPARENT);
 
 	
@@ -71,15 +73,16 @@ void test() {
 	
 	loadFLBG(&mainPanel.flbgArray);
 
-	mainPanel.btnCnt = 5;
+
+
+
+	mainPanel.btnCnt = 3;
 	Button* pba = mainPanel.buttonArray = (Button*)malloc(sizeof(Button) * mainPanel.btnCnt);
-	int startingY = HEIGHT / 2 - (BUTTON_DEFAULT_HEIGHT + BUTTON_DEFAULT_GAP) * mainPanel.btnCnt / 2;
-	char strBuf[STRING_BUFFER_SIZE] = "测";
+	int startingY = HEIGHT / 2 - (BUTTON_DEFAULT_HEIGHT + BUTTON_DEFAULT_GAP) * mainPanel.btnCnt / 2 +120;
+	char btnStrs[][20] = { "开始","选项","退出" };
 	for (int i = 0; i < mainPanel.btnCnt; i++) {
-		initMiddleButton(pba + i, startingY + (BUTTON_DEFAULT_HEIGHT + BUTTON_DEFAULT_GAP) * i, strBuf, &level);
-		strcat(strBuf, "试");
+		initMiddleButton(pba + i, startingY + (BUTTON_DEFAULT_HEIGHT + BUTTON_DEFAULT_GAP) * i, btnStrs[i], &mainBackgroundDark);
 	}
-	paintPanel(&mainPanel);
 
 
 	Point mousePoint = makePoint(0,0);
@@ -93,6 +96,10 @@ void test() {
 		updateBtnFocus(&mainPanel, mousePoint);
 		BeginBatchDraw();//开始批量绘图
 		putimage(0, 0, &mainBackground);
+		//putimage(WIDTH/4, 0, &logoMask, SRCAND);
+		//putimage(WIDTH / 4, 0, &logo, SRCINVERT);
+		//putimage(0, 0, &mainBackgroundDark, SRCINVERT);
+		//putimage(WIDTH/4, 0, &logo, SRCINVERT);
 		paintPanel(&mainPanel);
 		FlushBatchDraw();
 		EndBatchDraw();//结束批量绘图，将绘制好的图片统一贴到屏幕上。	
@@ -198,16 +205,16 @@ void paintButton(Button* pb) {
 	rectangle(pb->left, pb->top, pb->right, pb->buttom);
 	putimage(pb->left + 1, pb->top + 1, pb->right - pb->left - 1, pb->buttom - pb->top - 1, pb->texture, pb->left + 1, pb->top + 1);
 	settextstyle(
-		pb->or_height*(1+pb->focusDegree* BUTTON_GROWTH)/2,
+		pb->or_height*(1+pb->focusDegree* BUTTON_GROWTH)/3*2,
 		0,
-		_T("等线 Light"), 0, 0,
+		_T("微软雅黑 Light"), 0, 0,
 		pb->focusDegree*500,
 		false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
 
 
 	outtextxy(
-		pb->or_left + pb->focusDegree+1 * (pb->or_width - 16 * pb->strLen) * (1+BUTTON_GROWTH)/2 - 10,
-		pb->or_top + pb->or_height/4 - pb->or_height * pb->focusDegree * BUTTON_GROWTH / 4,
+		pb->or_left + pb->focusDegree+1 * (pb->or_width - 24 * pb->strLen) * (1+BUTTON_GROWTH)/2+4,
+		pb->or_top + pb->or_height/6 - pb->or_height * pb->focusDegree * BUTTON_GROWTH / 4,
 		_T(pb->str)
 	);
 }

@@ -12,8 +12,8 @@
 #define PI 3.14159269
 #define SQRT_3 1.7320508
 
-#define WIDTH 1000
-#define HEIGHT 600
+#define WIDTH 1280
+#define HEIGHT 720
 
 #define STORE_BY_POINTS 0
 #define STORE_BY_FUNCTION 1

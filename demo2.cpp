@@ -1,7 +1,5 @@
 #include "zuma.h"
 
-#define WIDTH 640
-#define HEIGHT 480
 
 typedef struct {
 	char name[20];

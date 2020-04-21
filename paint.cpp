@@ -1,10 +1,6 @@
 #include "zuma.h"
 
 void initPainting() {
-	if (DEBUG_OUTPUT)
-		initgraph(WIDTH, HEIGHT, SHOWCONSOLE);
-	else
-		initgraph(WIDTH, HEIGHT);
 	setfillstyle(BS_NULL);
 	setaspectratio(1, 1);
 	return;

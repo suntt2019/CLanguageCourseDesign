@@ -1,5 +1,13 @@
 #include "zuma.h"
 
+
+void startCoreGaming(char* dir) {
+	MajorData md;
+	loadMap(&md.mi, "maps",dir);
+	coreGaming(md);
+	return;
+}
+
 void coreGaming(MajorData md) {
 	md.gameEnd = false;
 	

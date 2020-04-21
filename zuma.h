@@ -7,7 +7,8 @@
 #include <math.h>
 #include <time.h>
 #include <winbase.h>
-//#include <dirent.h> 
+#include <io.h>
+#include <windows.h> 
 #include "cJSON/cJSON.h"
 
 #define PI 3.14159269
@@ -29,6 +30,34 @@
 #define STRING_BUFFER_SIZE 500
 
 
+#define BUTTON_DEFAULT_GAP 20
+#define BUTTON_TEXT_MAX 100
+#define MOUSE_BTN_FOCUS_DEGREE_INCREASE 0.05
+#define BUTTON_EDGE_DIFFUSION 64
+#define BUTTON_GROWTH 0.1
+#define BGFL_LEVEL 48
+#define BGFL_STEP 3
+#define BGFL_BIAS 2
+#define BGFL_THICKNESS 3
+
+
+#define MAIN_MENU_BTN_WIDTH 300
+#define MAIN_MENU_BTN_HEIGHT 64
+#define MAIN_MENU_BTN_GAP 20
+
+#define CHOOSING_MAP_PANEL_BTN_WIDTH 200
+#define CHOOSING_MAP_PANEL_BTN_HEIGHT 360
+#define CHOOSING_MAP_PANEL_BTN_GAP 60
+#define CHOOSING_MAP_RETURN_BTN_WIDTH 300
+#define CHOOSING_MAP_RETURN_BTN_HEIGHT 64
+#define CHOOSING_MAP_RETURN_BTN_GAP 40
+#define CHOOSING_MAP_PAGE_BTN_WIDTH 64
+#define CHOOSING_MAP_PAGE_BTN_HEIGHT 180
+#define CHOOSING_MAP_PAGE_BTN_GAP 40
+
+#define ENDING_PANEL_BTN_WIDTH 300
+#define ENDING_PANEL_BTN_HEIGHT 64
+#define ENDING_PANEL_BTN_GAP 50
 
 #define NULL_COLOR -1
 
@@ -125,7 +154,42 @@ typedef struct _MajorData {
 	FlyingBallArray flyingBallArray;
 }MajorData;
 
+typedef struct _Button {
+	char str[BUTTON_TEXT_MAX];
+	int strLen;
+	double strRelativeSize;
+	double focusDegree, linear_focusDegree;
+	int or_left, or_right, or_top, or_buttom;
+	int or_width, or_height, left, right, top, buttom;
+	int strBiasX, strBiasY;
+	bool strFollowY, strLeftJustify;
+	IMAGE* texture;
+}Button;
 
+typedef struct _Panel {
+	Button* buttonArray;
+	int btnCnt;
+	IMAGE* flbgArray;
+	IMAGE* background, * backgroundDark;
+	char* title;
+}Panel;
+
+typedef struct _MajorPanels {
+	Panel mainMenu, mapChoosingPanel, OptionPanel, pausePanel, developerPanel,endingPanel;
+	IMAGE* background, * backgroundDark, * backgroundFlbgArray;
+	IMAGE* backgroundWithLogo, * backgroundWithLogoDark, * backgroundWithLogoFlbgArray;
+}MajorPanels;
+
+typedef struct _MapPreview {
+	int ballCnt;
+	char dir[200],name[200];
+	IMAGE* zuma, zumaMask, ball, ballMask;
+}MapPreview;
+
+typedef struct _MapPreviewArray {
+	MapPreview* mpa;
+	int cnt;
+}MapPreviewArray;
 
 void demo1();
 
@@ -205,8 +269,29 @@ void paintViewBallList(BallList* pbl, MapInfo* pmi, int index);
 void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi);
 void outtextxy(Point p, LPCTSTR str);
 void demo2();
-
-
+void initLineMiddleButton(Button* pb, int y, int width, int height, char* str, double strRelativeSize, IMAGE* texture);
+void paintPanel(Panel* ppanel);
+void paintButton(Button* pb);
+bool testBtnFocus(Button* pb, Point p);
+void updateBtnFocus(Panel* ppanel, Point mousePoint);
+void paintButtonFocusLine(Button* pb, IMAGE* flbgArray);
+void initFLBG(IMAGE* pbg, char* name);
+void loadFLBG(IMAGE** pflbgArray, char* name);
+void updateBtn(Button* pb);
+void initPanels(MajorPanels* pmp);
+void initMainMenu(Panel* pmm, const MajorPanels* pmp);
+void mainMenu(MajorPanels* pmp);
+int testBtnClick(Panel* ppanel, Point mouseClickedPoint);
+int operatePanelsMouseEvents(Panel* pp);
+void initMapChoosingPanel(Panel* pmcp, const MajorPanels* pmp);
+void mapChoosingPanel(MajorPanels* pmp);
+void initColumnMiddleButton(Button* pb, int x, int btnWidth, int btnHeight, char* str, double strRelativeSize, IMAGE* texture);
+void initButton(Button* pb, int left, int right, int top, int buttom, char* str, double strRelativeSize, IMAGE* texture);
+void previewMaps(MapPreviewArray** ppmpa);
+void previewSingleMap(char* name, MapPreview* pmp);
+void startCoreGaming(char* dir);
+void initEndingPanel(Panel* pep, const MajorPanels* pmp);
+void endingPanel(MajorPanels* pmp);
 
 
 

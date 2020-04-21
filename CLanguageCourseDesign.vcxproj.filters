@@ -63,6 +63,12 @@
     <ClCompile Include="demo2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="panelOperations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="previewMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="zuma.h">

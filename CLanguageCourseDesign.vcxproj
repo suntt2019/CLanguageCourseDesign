@@ -38,7 +38,9 @@
     <ClCompile Include="loadMap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="paint.cpp" />
+    <ClCompile Include="panelOperations.cpp" />
     <ClCompile Include="point.cpp" />
+    <ClCompile Include="previewMap.cpp" />
     <ClCompile Include="route.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="zuma.cpp" />

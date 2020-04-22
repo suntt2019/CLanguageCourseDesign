@@ -42,6 +42,7 @@
     <ClCompile Include="point.cpp" />
     <ClCompile Include="previewMap.cpp" />
     <ClCompile Include="route.cpp" />
+    <ClCompile Include="panels.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="zuma.cpp" />
     <ClCompile Include="zumaExceptions.cpp" />

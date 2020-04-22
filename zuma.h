@@ -9,6 +9,8 @@
 #include <winbase.h>
 #include <io.h>
 #include <windows.h> 
+#include <conio.h>
+#include <mmsystem.h>
 #include "cJSON/cJSON.h"
 
 #define PI 3.14159269
@@ -61,7 +63,7 @@
 
 #define NULL_COLOR -1
 
-#define DEBUG_OUTPUT 1
+#define DEBUG_OUTPUT 0
 #define TORLANCE 0.01
 
 typedef struct _Point {
@@ -175,9 +177,10 @@ typedef struct _Panel {
 }Panel;
 
 typedef struct _MajorPanels {
-	Panel mainMenu, mapChoosingPanel, OptionPanel, pausePanel, developerPanel,endingPanel;
+	Panel mainMenu, mapChoosingPanel,optionPanel, pausePanel, developerPanel,endingPanel;
 	IMAGE* background, * backgroundDark, * backgroundFlbgArray;
 	IMAGE* backgroundWithLogo, * backgroundWithLogoDark, * backgroundWithLogoFlbgArray;
+	double musicVolume, foleyVolume;
 }MajorPanels;
 
 typedef struct _MapPreview {
@@ -193,7 +196,7 @@ typedef struct _MapPreviewArray {
 
 void demo1();
 
-void coreGaming(MajorData md);
+void coreGaming(MajorData md, MajorPanels* pmp);
 void operatingInput(MajorData* pmd);
 void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi);
 void paintImage(MajorData* pmd);
@@ -215,14 +218,14 @@ void initPainting();
 Point makePoint(double x, double y);
 void paintBallList(BallList* pbl, MapInfo* pmi);
 void paintFlyingBall(FlyingBallArray& fba, Zuma zuma, MapInfo* pmi);
-void loadMap(MapInfo* pmi, char* folder, char* mapName);
-void parseJsonInt(const cJSON* pjson, char* name, int* pInt);
-void parseJsonDouble(const cJSON* pjson, char* name, double* pDouble);
-void parseGameSettingsJson(MapInfo* pmi, const cJSON* json);
-void parseBallListJson(Route* pr, const cJSON* json, char* folder, char* mapName);
-void parseJsonString(const cJSON* json, char* name, char* str);
-void parseJsonPoint(const cJSON* json, char* name, Point* pPoint);
-void loadRouteFile(Route* pr, char* dir);
+bool loadMap(MapInfo* pmi, char* folder, char* mapName);
+bool parseJsonInt(const cJSON* pjson, char* name, int* pInt);
+bool parseJsonDouble(const cJSON* pjson, char* name, double* pDouble);
+bool parseGameSettingsJson(MapInfo* pmi, const cJSON* json);
+bool parseBallListJson(Route* pr, const cJSON* json, char* folder, char* mapName);
+bool parseJsonString(const cJSON* json, char* name, char* str);
+bool parseJsonPoint(const cJSON* json, char* name, Point* pPoint);
+bool loadRouteFile(Route* pr, char* dir);
 void viewRoute(Route* pr);
 int handleException(int errorCode);
 void initAllBallList(BallList** ppbl, MapInfo* pmi);
@@ -246,8 +249,8 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi);
 void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
 void testCrashAll(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi);
 double getGapBetweenBOL(BallList* pbl, GameSettings* pgs, BallOnList* p1, BallOnList* p2);
-void parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
-void parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
+bool parseMapPositionInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
+bool parseResourceInfoJson(MapInfo* pmi, const cJSON* json, char* folder, char* mapName);
 int gameMain();
 bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int attractionLevelBase);
 void computeAttractionPull(BallList* pbl, MapInfo* pmi);
@@ -264,7 +267,7 @@ bool checkIfBallListEmpty(BallList* pbl);
 void computeAllBallListPoint(BallList* pbl, MapInfo* pmi);
 bool checkIfBallListOverFlow(BallList* pbl);
 int getBallColor(ResourceInfo* pri, Route* pr, int index);
-void parseGeneratingBallMethod(Route* pr, const cJSON* json, char* folder, char* mapName);
+bool parseGeneratingBallMethod(Route* pr, const cJSON* json, char* folder, char* mapName);
 void paintViewBallList(BallList* pbl, MapInfo* pmi, int index);
 void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi);
 void outtextxy(Point p, LPCTSTR str);
@@ -288,12 +291,18 @@ void mapChoosingPanel(MajorPanels* pmp);
 void initColumnMiddleButton(Button* pb, int x, int btnWidth, int btnHeight, char* str, double strRelativeSize, IMAGE* texture);
 void initButton(Button* pb, int left, int right, int top, int buttom, char* str, double strRelativeSize, IMAGE* texture);
 void previewMaps(MapPreviewArray** ppmpa);
-void previewSingleMap(char* name, MapPreview* pmp);
-void startCoreGaming(char* dir);
+bool previewSingleMap(char* name, MapPreview* pmp);
+void startCoreGaming(char* dir, MajorPanels* pmp);
 void initEndingPanel(Panel* pep, const MajorPanels* pmp);
 void endingPanel(MajorPanels* pmp);
-
-
+void initPausePanel(Panel* ppp, const MajorPanels* pmp);
+bool pausePanel(MajorPanels* pmp);
+void clearBtnFocusDegree(Button* pbtn);
+int operatePanelsMouseEvents(Panel* pp, Point* pmouseClickedPoint);
+void optionPanel(MajorPanels* pmp);
+void initOptionPanel(Panel* pop, const MajorPanels* pmp);
+void initDeveloperPanel(Panel* pdp, const MajorPanels* pmp);
+void developerPanel(MajorPanels* pmp);
 
 void test();
 

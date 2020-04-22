@@ -1,0 +1,83 @@
+{
+	"name": "Circle",
+	"gameSettings": {
+		"shootingCD": 15,
+		"swappingCD": 10,
+		"ballR": 20,
+		"moveSpeed": 0.5,
+		"flySpeed": 6,
+		"beginningRushSpeed": 5,
+		"attractionPullForce": -3,
+		"insertingSpeed": 0.04
+	},
+	"mapPositionInfo": {
+		"ballListCount": 1,
+		"ballLists": [
+			{
+				"ballCount": 30,
+				"generatingBallMethod": "probability",
+				"sameBallProbability": 4,
+				"beginningRushRound": 150,
+				"routeStoringMethod": "STORE_BY_POINTS",
+				"routeInfo": {
+					"routeFileName": "route.zroute",
+					"pointCount": 3000,
+					"pointStep": 1
+				}
+			}
+		],
+		"zuma": {
+			"zumaPosition": {
+				"x": 600,
+				"y": 300
+			},
+			"deltaMouthPosition": {
+				"x": 10,
+				"y": 65
+			},
+			"deltaHolePosition": {
+				"x": 5,
+				"y": -10
+			}
+		}
+	},
+	"resourceInfo": {
+		"backGround": "background.jpg",
+		"zuma": "zuma.jpg",
+		"zumaMask": "zuma_mask.jpg",
+		"balls": {
+			"colorCount": 5,
+			"resource": [
+				{
+					"img": "fish_0.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_1.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_2.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_3.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_4.jpg",
+					"mask": "fish_mask.jpg"
+				}
+			]
+		},
+		"img": {
+			"imgCount": 0,
+			"resource": [
+
+			]
+		}
+
+	}
+
+}
+

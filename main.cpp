@@ -5,6 +5,8 @@ int main(){
 }
 
 int gameMain() {
+	//test();
+	//return 0;
 	MajorPanels mp;
 	initPanels(&mp);
 	mainMenu(&mp);

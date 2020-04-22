@@ -60,8 +60,11 @@ void paintViewBallList(BallList* pbl,MapInfo* pmi,int index) {
 	BallOnList* p = pbl->tail;
 	Point point;
 	char stringBuffer[STRING_BUFFER_SIZE];
-	sprintf(stringBuffer, "score-%d: %d", index, pbl->score);
-	outtextxy(20, 20 + index * 16, stringBuffer);
+	settextcolor(BLACK);
+	settextstyle(20, 0, _T("Î¢ÈíÑÅºÚ Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
+	sprintf(stringBuffer, "score[%d]: %d", index, pbl->score);
+	outtextxy(20, 20 + index* 16, stringBuffer);
+	settextcolor(WHITE);
 	point = route(pbl->pr, pbl->latestRemovedBallPosition);
 	fillcircle(point.x, point.y, pmi->gs.ballR/3);
 	while (p) {

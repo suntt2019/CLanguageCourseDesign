@@ -1,14 +1,15 @@
 #include "zuma.h"
 
 
-void startCoreGaming(char* dir) {
+void startCoreGaming(char* dir, MajorPanels* pmp) {
 	MajorData md;
-	loadMap(&md.mi, "maps",dir);
-	coreGaming(md);
+	if (!loadMap(&md.mi, "maps", dir))
+		handleException(14);
+	coreGaming(md,pmp);
 	return;
 }
 
-void coreGaming(MajorData md) {
+void coreGaming(MajorData md, MajorPanels* pmp) {
 	md.gameEnd = false;
 	
 	initAllBallList(&md.pbl, &md.mi);
@@ -16,6 +17,8 @@ void coreGaming(MajorData md) {
 	initFlyingBallArray(md.flyingBallArray, &md.mi);
 	initPainting();
 	while (!md.gameEnd) {
+		if (kbhit() && 27 == getch() && pausePanel(pmp))
+			return;
 		upadateColorInfo(&md);
 		operatingInput(&md);//处理玩家操作
 		computeZuma(&md.zuma);
@@ -28,6 +31,7 @@ void coreGaming(MajorData md) {
 		//Sleep(50);	//暂停
 		//TODO:测试一下要不要计时，然后sleep(1000/fps-计时)
 	}
+	Sleep(3000);
 	return;
 }
 
@@ -67,15 +71,21 @@ void gameover(bool isVectory,BallList* pbl,MapInfo* pmi) {
 		paintViewAllBallList(pbl, pmi);
 	}
 	settleScore(isVectory, pbl, pmi);
+	settextcolor(BLACK);
+	settextstyle(100, 0, _T("微软雅黑 Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
 	if (isVectory)
-		outtextxy(20, 100, "YOU WIN");
+		outtextxy(WIDTH/2-200, HEIGHT/2-50, "YOU WIN");
 	else
-		outtextxy(20, 100, "YOU LOSE");
+		outtextxy(WIDTH / 2 - 200, HEIGHT / 2 - 50, "YOU LOSE");
+	settextcolor(WHITE);
 	if (DEBUG_OUTPUT) {
 		char stringBuffer[STRING_BUFFER_SIZE];
 		for (int i = 0; i < pmi->mpi.ballListCount; i++) {
-			sprintf(stringBuffer, "score-%d: %d", i, pbl[i].score);
-			outtextxy(20, 20 + i * 16, stringBuffer);
+			settextcolor(BLACK);
+			settextstyle(20, 0, _T("微软雅黑 Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
+			sprintf(stringBuffer, "score[%d]: %d", i, pbl[i].score);
+			//outtextxy(20, 20 + i * 16, stringBuffer);
+			settextcolor(WHITE);
 		}
 	}
 	return;
@@ -90,6 +100,7 @@ void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi) {
 				if (pbl[i].latestRemovedBallPosition >= pbl[i].pr->pointCount - 100)
 					continue;
 				finishedRouteRemainScore = false;
+				settextstyle(40, 0, _T("微软雅黑 Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
 				outtextxy(minus(route(pbl[i].pr, pbl[i].latestRemovedBallPosition), makePoint(0, 0)), "+100");
 				pbl[i].score += 100;
 				pbl[i].latestRemovedBallPosition += 100;

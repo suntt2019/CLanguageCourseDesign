@@ -1,6 +1,6 @@
 #include "zuma.h"
 
-int operatePanelsMouseEvents(Panel* pp) {
+int operatePanelsMouseEvents(Panel* pp, Point* pmouseClickedPoint) {
 	static Point mousePoint = makePoint(0, 0);
 	Point mouseClickedPoint = makePoint(0, 0);
 	int ret = -1, thisValue;
@@ -15,12 +15,18 @@ int operatePanelsMouseEvents(Panel* pp) {
 				ret = thisValue;
 		}
 	}
+	if(pmouseClickedPoint)
+		*pmouseClickedPoint = mouseClickedPoint;
 	updateBtnFocus(pp, mousePoint);
 	return ret;
 }
 
+int operatePanelsMouseEvents(Panel* pp) {
+	return operatePanelsMouseEvents(pp, NULL);
+}
 
 
+/*
 void initFLBG(IMAGE* pbg, char* name) {
 	char strBuf[STRING_BUFFER_SIZE];
 	DWORD* pMem = GetImageBuffer(pbg);
@@ -37,6 +43,7 @@ void initFLBG(IMAGE* pbg, char* name) {
 		//Sleep(50);
 	}
 }
+*/
 
 void loadFLBG(IMAGE** pflbgArray, char* name) {
 	char strBuf[STRING_BUFFER_SIZE];
@@ -183,4 +190,10 @@ int testBtnClick(Panel* ppanel, Point mouseClickedPoint) {
 			return i;
 	}
 	return -1;
+}
+
+void clearBtnFocusDegree(Button* pbtn) {
+	pbtn->linear_focusDegree = 0;
+	pbtn->focusDegree = 0;
+	return;
 }

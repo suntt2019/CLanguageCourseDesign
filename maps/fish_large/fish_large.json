@@ -1,0 +1,96 @@
+{
+    "name": "Large",
+	"gameSettings": {
+		"shootingCD": 15,
+		"swappingCD": 10,
+		"ballR": 40,
+		"moveSpeed": 0.5,
+		"flySpeed": 10,
+		"beginningRushSpeed": 6,
+		"attractionPullForce": -6,
+		"insertingSpeed": 0.1
+	},
+	"mapPositionInfo": {
+		"ballListCount": 2,
+		"ballLists": [
+			{
+				"ballCount": 5,
+				"generatingBallMethod": "probability",
+				"sameBallProbability": 2,
+				"ballListOrderFile": "fbo.zorder",
+				"beginningRushRound": 60,
+				"routeStoringMethod": "STORE_BY_POINTS",
+				"routeInfo": {
+					"routeFileName": "route.zroute",
+					"pointCount": 942,
+					"pointStep": 1
+				}
+			},
+			{
+				"ballCount": 5,
+				"generatingBallMethod": "probability",
+				"sameBallProbability": 3,
+				"beginningRushRound": 50,
+				"routeStoringMethod": "STORE_BY_POINTS",
+				"routeInfo": {
+					"routeFileName": "route2.zroute",
+					"pointCount": 942,
+					"pointStep": 1
+				}
+			}
+		],
+		"zuma": {
+			"zumaPosition": {
+				"x": 600,
+				"y": 400
+			},
+			"deltaMouthPosition": {
+				"x": 20,
+				"y": 130
+			},
+			"deltaHolePosition": {
+				"x": 10,
+				"y": -20
+			}
+		}
+	},
+	"resourceInfo": {
+		"backGround": "background.jpg",
+		"zuma": "zuma.jpg",
+		"zumaMask": "zuma_mask.jpg",
+		"balls": {
+			"colorCount": 5,
+			"resource": [
+				{
+					"img": "fish_0.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_1.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_2.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_3.jpg",
+					"mask": "fish_mask.jpg"
+				},
+				{
+					"img": "fish_4.jpg",
+					"mask": "fish_mask.jpg"
+				}
+			]
+		},
+		"img": {
+			"imgCount": 0,
+			"resource": [
+
+			]
+		}
+		
+	}
+
+}
+

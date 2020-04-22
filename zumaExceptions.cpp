@@ -18,6 +18,7 @@ int handleException(int exceptionCode) {
 		"zorder file not found",
 		"Fixed ball order index out of bounds",
 		"Can't get file handle: image//*",//13
+		"Fail to load map",
 		//TODO:错误代码改进，改进为分部分的
 
 
@@ -40,8 +41,6 @@ int handleException(int exceptionCode) {
 		printf("[[Zuma Excption]] ended without exception.\n");
 		if(DEBUG_OUTPUT)
 			system("pause");
-		else
-			Sleep(10000);
 		return returnValue;
 	}
 }

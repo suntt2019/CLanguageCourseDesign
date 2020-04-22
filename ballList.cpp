@@ -75,7 +75,7 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 int getBallColor(ResourceInfo* pri,Route* pr,int index) {
 	int ret = -1;
 	static int lastColor;
-	printf("%s\n", pr->generatingBallMethod);
+	//printf("%s\n", pr->generatingBallMethod);
 	if (strcmp(pr->generatingBallMethod, "random") == 0) {
 		ret = generateRandomColor(pri);
 	}else if (strcmp(pr->generatingBallMethod, "probability") == 0) {

@@ -17,8 +17,9 @@ int handleException(int exceptionCode) {
 		"sameBallProbability can't be 0 (because it's a denominator)",//10
 		"zorder file not found",
 		"Fixed ball order index out of bounds",
-		"Can't get file handle: image//*",//13
+		"Can't get file handle: image//*",
 		"Fail to load map",
+		"Exception for test",//15
 		//TODO:错误代码改进，改进为分部分的
 
 

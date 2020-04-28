@@ -46,6 +46,7 @@
     <ClCompile Include="test.cpp" />
     <ClCompile Include="zuma.cpp" />
     <ClCompile Include="zumaExceptions.cpp" />
+    <ClCompile Include="audio.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cJSON\cJSON.h" />

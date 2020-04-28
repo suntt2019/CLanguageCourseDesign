@@ -9,6 +9,8 @@ void initPanels(MajorPanels* pmp) {
 
 	setbkmode(TRANSPARENT);
 
+	loadAudio();
+
 	//initFLBG(pmp->background, "mainBackGround");
 
 	pmp->backgroundWithLogo = new IMAGE();
@@ -293,7 +295,7 @@ void optionPanel(MajorPanels* pmp) {
 		}
 		mcX = mouseClickedPoint.x;
 		mcY = mouseClickedPoint.y;
-		if (WIDTH / 3 + 20 <= mcX && mcX <= WIDTH * 2 / 3 + 100) {
+		if (WIDTH / 3 + 40 <= mcX && mcX <= WIDTH * 2 / 3 + 80) {
 			if (HEIGHT / 3 - 60 <= mcY && mcY <= HEIGHT / 3 + 10) {
 				pmp->musicVolume = (mcX - WIDTH / 3 - 60) / (WIDTH / 3);
 			}

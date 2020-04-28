@@ -34,7 +34,7 @@
 
 #define BUTTON_DEFAULT_GAP 20
 #define BUTTON_TEXT_MAX 100
-#define MOUSE_BTN_FOCUS_DEGREE_INCREASE 0.05
+#define MOUSE_BTN_FOCUS_DEGREE_INCREASE 0.06
 #define BUTTON_EDGE_DIFFUSION 64
 #define BUTTON_GROWTH 0.1
 #define BGFL_LEVEL 48
@@ -63,8 +63,10 @@
 
 #define NULL_COLOR -1
 
-#define DEBUG_OUTPUT 0
+#define DEBUG_OUTPUT 1
 #define TORLANCE 0.01
+
+#pragma comment(lib,"Winmm.lib")
 
 typedef struct _Point {
 	double x;
@@ -165,6 +167,7 @@ typedef struct _Button {
 	int or_width, or_height, left, right, top, buttom;
 	int strBiasX, strBiasY;
 	bool strFollowY, strLeftJustify;
+	bool isFocusDegreeIncreasing;
 	IMAGE* texture;
 }Button;
 
@@ -303,6 +306,9 @@ void optionPanel(MajorPanels* pmp);
 void initOptionPanel(Panel* pop, const MajorPanels* pmp);
 void initDeveloperPanel(Panel* pdp, const MajorPanels* pmp);
 void developerPanel(MajorPanels* pmp);
+void loadAudio();
+void playAudio(char* name, int volume);
+
 
 void test();
 

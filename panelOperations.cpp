@@ -3,6 +3,7 @@
 int operatePanelsMouseEvents(Panel* pp, Point* pmouseClickedPoint) {
 	static Point mousePoint = makePoint(0, 0);
 	Point mouseClickedPoint = makePoint(0, 0);
+	bool clicked = false;
 	int ret = -1, thisValue;
 	MOUSEMSG mmsg;
 	while (MouseHit()) {
@@ -11,12 +12,15 @@ int operatePanelsMouseEvents(Panel* pp, Point* pmouseClickedPoint) {
 		if (mmsg.mkLButton) {
 			mouseClickedPoint = mousePoint;
 			thisValue = testBtnClick(pp, mouseClickedPoint);
+			clicked = true;
 			if (thisValue >= 0)
 				ret = thisValue;
 		}
 	}
 	if(pmouseClickedPoint)
 		*pmouseClickedPoint = mouseClickedPoint;
+	if (clicked&& ret!=-1)
+		playAudio("clicked", 100);
 	updateBtnFocus(pp, mousePoint);
 	return ret;
 }
@@ -83,6 +87,7 @@ void initButton(Button* pb, int left, int right, int top, int buttom, char* str,
 	pb->strBiasY = 0;
 	pb->strFollowY = false;
 	pb->strLeftJustify = false;
+	pb->isFocusDegreeIncreasing = false;
 	strncpy(pb->str, str, BUTTON_TEXT_MAX);
 	return;
 }
@@ -170,14 +175,20 @@ void updateBtnFocus(Panel* ppanel, Point mousePoint) {
 		if (testBtnFocus(ppanel->buttonArray + i, mousePoint)) {
 			if (ppanel->buttonArray[i].linear_focusDegree < 1)
 				ppanel->buttonArray[i].linear_focusDegree += MOUSE_BTN_FOCUS_DEGREE_INCREASE;
+			if (!ppanel->buttonArray[i].isFocusDegreeIncreasing) {
+				playAudio("focus", 100);
+				ppanel->buttonArray[i].isFocusDegreeIncreasing = true;
+			}
 			if (DEBUG_OUTPUT > 1)
 				printf("button[%d].focusDegree = %.2lf\n", i, ppanel->buttonArray[i].linear_focusDegree);
 		}
 		else if (ppanel->buttonArray[i].linear_focusDegree > 0) {
 			ppanel->buttonArray[i].linear_focusDegree -= MOUSE_BTN_FOCUS_DEGREE_INCREASE;
+			ppanel->buttonArray[i].isFocusDegreeIncreasing = false;
 		}
-		if (ppanel->buttonArray[i].linear_focusDegree > 1)
+		if (ppanel->buttonArray[i].linear_focusDegree > 1) {
 			ppanel->buttonArray[i].linear_focusDegree = 1;
+		}	
 		if (ppanel->buttonArray[i].linear_focusDegree < 0)
 			ppanel->buttonArray[i].linear_focusDegree = 0;
 	}

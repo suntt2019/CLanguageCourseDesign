@@ -5,6 +5,7 @@ void startCoreGaming(char* dir, MajorPanels* pmp) {
 	MajorData md;
 	if (!loadMap(&md.mi, "maps", dir))
 		handleException(14);
+	//handleException(15);
 	coreGaming(md,pmp);
 	return;
 }

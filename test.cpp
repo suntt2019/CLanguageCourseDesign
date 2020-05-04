@@ -3,7 +3,7 @@
 
 void test() {
 	loadAudio();
-	//playAudio("focus", 100);
+	//playAudio("focus", foleyVolume(-1)*100);
 	//mciSendString("", NULL, 0, NULL);
 	
 	

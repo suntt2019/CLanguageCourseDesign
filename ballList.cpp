@@ -252,6 +252,7 @@ void computeBallListPoint(BallList* pbl, MapInfo* pmi) {
 
 //TODO:想办法让这个函数的参数数量少一点
 void insertBallList(BallList* pbl, BallOnList* pbol_prev, BallOnList* pbol_next, FlyingBallArray& fba, int index, MapInfo* pmi,bool crashPrev) {
+	playAudio("crash", foleyVolume(-1)*100);
 	BallOnList* p = (BallOnList*)malloc(sizeof(BallOnList));
 	if (!p) { 
 		handleException(5);
@@ -359,6 +360,7 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 			printf("\n[DEBUG_OUTPUT]testAchievingScore():\n");
 			printf("  pbol_new=%p, pbol_begin=%p, pbol_end=%p, cnt=%d\n", pbol_new, pbol_begin, pbol_end, cnt);
 		}
+		playAudio("score", foleyVolume(-1)*100);
 		pbl->score += SCORE_ACHIEVE_MORE_THAN_3 * (cnt - 3);
 		//free
 		p = pbol_begin;

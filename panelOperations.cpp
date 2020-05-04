@@ -20,7 +20,7 @@ int operatePanelsMouseEvents(Panel* pp, Point* pmouseClickedPoint) {
 	if(pmouseClickedPoint)
 		*pmouseClickedPoint = mouseClickedPoint;
 	if (clicked&& ret!=-1)
-		playAudio("clicked", 100);
+		playAudio("clicked", foleyVolume(-1)*100);
 	updateBtnFocus(pp, mousePoint);
 	return ret;
 }
@@ -176,7 +176,8 @@ void updateBtnFocus(Panel* ppanel, Point mousePoint) {
 			if (ppanel->buttonArray[i].linear_focusDegree < 1)
 				ppanel->buttonArray[i].linear_focusDegree += MOUSE_BTN_FOCUS_DEGREE_INCREASE;
 			if (!ppanel->buttonArray[i].isFocusDegreeIncreasing) {
-				playAudio("focus", 100);
+				playAudio("focus", foleyVolume(-1)*100);
+				//playAudio("score", foleyVolume(-1)*100);
 				ppanel->buttonArray[i].isFocusDegreeIncreasing = true;
 			}
 			if (DEBUG_OUTPUT > 1)

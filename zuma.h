@@ -308,7 +308,8 @@ void initDeveloperPanel(Panel* pdp, const MajorPanels* pmp);
 void developerPanel(MajorPanels* pmp);
 void loadAudio();
 void playAudio(char* name, int volume);
-
+double musicVolume(double v);
+double foleyVolume(double v);
 
 void test();
 

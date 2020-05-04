@@ -74,10 +74,13 @@ void gameover(bool isVectory,BallList* pbl,MapInfo* pmi) {
 	settleScore(isVectory, pbl, pmi);
 	settextcolor(BLACK);
 	settextstyle(100, 0, _T("Î¢ÈíÑÅºÚ Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
-	if (isVectory)
-		outtextxy(WIDTH/2-200, HEIGHT/2-50, "YOU WIN");
-	else
+	if (isVectory) {
+		playAudio("victory", foleyVolume(-1)*100);
+		outtextxy(WIDTH / 2 - 200, HEIGHT / 2 - 50, "YOU WIN");
+	}else {
+		playAudio("failure", foleyVolume(-1)*100);
 		outtextxy(WIDTH / 2 - 200, HEIGHT / 2 - 50, "YOU LOSE");
+	}
 	settextcolor(WHITE);
 	if (DEBUG_OUTPUT) {
 		char stringBuffer[STRING_BUFFER_SIZE];
@@ -102,6 +105,7 @@ void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi) {
 					continue;
 				finishedRouteRemainScore = false;
 				settextstyle(40, 0, _T("Î¢ÈíÑÅºÚ Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
+				playAudio("score", foleyVolume(-1)*100);
 				outtextxy(minus(route(pbl[i].pr, pbl[i].latestRemovedBallPosition), makePoint(0, 0)), "+100");
 				pbl[i].score += 100;
 				pbl[i].latestRemovedBallPosition += 100;

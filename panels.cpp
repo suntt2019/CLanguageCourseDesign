@@ -32,8 +32,8 @@ void initPanels(MajorPanels* pmp) {
 	initDeveloperPanel(&pmp->developerPanel, pmp);
 
 	//TODO:从文件中读取
-	pmp->musicVolume = 1;
-	pmp->foleyVolume = 1;
+	musicVolume(1);
+	foleyVolume(1);
 	return;
 }
 
@@ -136,7 +136,7 @@ void initDeveloperPanel(Panel* pdp, const MajorPanels* pmp) {
 
 
 void mainMenu(MajorPanels* pmp) {
-
+	
 	while (true) {
 		switch (operatePanelsMouseEvents(&pmp->mainMenu)) {
 		case 0:
@@ -272,16 +272,16 @@ void optionPanel(MajorPanels* pmp) {
 	while (true) {
 		switch (operatePanelsMouseEvents(&pmp->optionPanel,&mouseClickedPoint)) {
 		case 0:
-				pmp->musicVolume -= 0.1;
+			musicVolume(musicVolume(-1) - 0.1);
 			break;
 		case 1:
-				pmp->musicVolume += 0.1;
+			musicVolume(musicVolume(-1) + 0.1);
 			break;
 		case 2:
-				pmp->foleyVolume -= 0.1;
+			foleyVolume(foleyVolume(-1) - 0.1);
 			break;
 		case 3:
-				pmp->foleyVolume += 0.1;
+			foleyVolume(foleyVolume(-1) + 0.1);
 			break;
 		case 4:
 			developerPanel(pmp);
@@ -297,22 +297,22 @@ void optionPanel(MajorPanels* pmp) {
 		mcY = mouseClickedPoint.y;
 		if (WIDTH / 3 + 40 <= mcX && mcX <= WIDTH * 2 / 3 + 80) {
 			if (HEIGHT / 3 - 60 <= mcY && mcY <= HEIGHT / 3 + 10) {
-				pmp->musicVolume = (mcX - WIDTH / 3 - 60) / (WIDTH / 3);
+				musicVolume((mcX - WIDTH / 3 - 60) / (WIDTH / 3));
 			}
 			else if(HEIGHT / 3 + 20 <= mcY && mcY <= HEIGHT / 3 + 90)
-				pmp->foleyVolume = (mcX - WIDTH / 3 - 60) / (WIDTH / 3);
+				foleyVolume((mcX - WIDTH / 3 - 60) / (WIDTH / 3));
 		}
-		if (pmp->musicVolume < 0)
-			pmp->musicVolume = 0;
-		if (pmp->musicVolume > 1)
-			pmp->musicVolume = 1;
-		if (pmp->foleyVolume < 0)
-			pmp->foleyVolume = 0;
-		if (pmp->foleyVolume > 1)
-			pmp->foleyVolume = 1;
+		if (musicVolume(-1) < 0)
+			musicVolume(0);
+		if (musicVolume(-1) > 1)
+			musicVolume(1);
+		if (foleyVolume(-1) < 0)
+			foleyVolume(0);
+		if (foleyVolume(-1) > 1)
+			foleyVolume(1);
 		
-		musicSliderPosition = WIDTH / 3 * (1 + pmp->musicVolume) +60;
-		foleySliderPosition = WIDTH / 3 * (1 + pmp->foleyVolume) +60;
+		musicSliderPosition = WIDTH / 3 * (1 + musicVolume(-1)) +60;
+		foleySliderPosition = WIDTH / 3 * (1 + foleyVolume(-1)) +60;
 		BeginBatchDraw();
 		paintPanel(&pmp->optionPanel);
 		setfillstyle(BS_SOLID);
@@ -321,8 +321,8 @@ void optionPanel(MajorPanels* pmp) {
 		outtextxy(WIDTH / 3 - 150, HEIGHT / 3 - 58, "音乐音量");
 		outtextxy(WIDTH / 3 - 150, HEIGHT / 3 + 22, "音效音量");
 
-		sprintf(musicStr, "%d", (int)(pmp->musicVolume * 100));
-		sprintf(foleyStr, "%d", (int)(pmp->foleyVolume * 100));
+		sprintf(musicStr, "%d", (int)(musicVolume(-1) * 100));
+		sprintf(foleyStr, "%d", (int)(foleyVolume(-1) * 100));
 
 		settextstyle(30, 0, _T("微软雅黑 Light"), 0, 0, 600, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
 		outtextxy(musicSliderPosition - 6 * strlen(musicStr), HEIGHT / 3 - 30, musicStr);

@@ -9,6 +9,10 @@ void initPanels(MajorPanels* pmp) {
 
 	setbkmode(TRANSPARENT);
 
+	IMAGE loadingBackground;
+	loadimage(&loadingBackground, "image\\main_background_loading.jpg", WIDTH, HEIGHT, true);
+	putimage(0, 0, &loadingBackground);
+
 	loadAudio();
 
 	//initFLBG(pmp->background, "mainBackGround");

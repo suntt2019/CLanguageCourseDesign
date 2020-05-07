@@ -63,7 +63,7 @@
 
 #define NULL_COLOR -1
 
-#define DEBUG_OUTPUT 1
+#define DEBUG_OUTPUT 0
 #define TORLANCE 0.01
 
 #pragma comment(lib,"Winmm.lib")

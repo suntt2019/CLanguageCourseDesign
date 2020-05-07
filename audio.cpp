@@ -1,14 +1,14 @@
 #include "zuma.h"
 
-#define AUDIO_COPY_CNT 20
+#define AUDIO_COPY_CNT 10
 
 void loadAudio() {
 	char commandBuffer[400];
-	char audioName[][50] = { "focus","clicked","1" ,"shooting","crash","standerd","score","failure","victory"};
+	char audioName[][50] = { "focus","clicked","1" ,"shooting","crash","standerd","score","failure","victory","score0" ,"score1" ,"score2" ,"score3" ,"score4" };
 	if (DEBUG_OUTPUT)
 		printf("[DEBUG_OUTPUT]loadAudio()\n");
 	//mciSendString("open \"audio\\1.mp3\" alias gbtc", NULL, 0, NULL);
-	for (int i = 0; i < 9; i++) {
+	for (int i = 0; i < 14; i++) {
 		for (int j = 0; j < AUDIO_COPY_CNT; j++) {
 			sprintf(commandBuffer, "open \"audio\\%s.mp3\" alias %s_%d", audioName[i], audioName[i], j);
 			mciSendString(commandBuffer, NULL, 0, NULL);

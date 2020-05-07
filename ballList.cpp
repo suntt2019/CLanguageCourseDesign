@@ -360,7 +360,6 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 			printf("\n[DEBUG_OUTPUT]testAchievingScore():\n");
 			printf("  pbol_new=%p, pbol_begin=%p, pbol_end=%p, cnt=%d\n", pbol_new, pbol_begin, pbol_end, cnt);
 		}
-		playAudio("score", foleyVolume(-1)*100);
 		pbl->score += SCORE_ACHIEVE_MORE_THAN_3 * (cnt - 3);
 		//free
 		p = pbol_begin;
@@ -377,6 +376,21 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 			}
 			pbol_attract->attractLevel = attractionLevelBase + 1;
 		}
+
+		char audioNameBuf[30] = "";
+		int atl = 0;
+		static int nextAtl = 0;
+		sprintf(audioNameBuf, "score%d", nextAtl);
+		playAudio(audioNameBuf, foleyVolume(-1) * 100);
+		if (pbol_attract) {
+			atl = pbol_attract->attractLevel < 5 ? pbol_attract->attractLevel : 4;
+			printf("pbol_attract->attractLevel=%d\n", pbol_attract->attractLevel);
+		}
+		else {
+			printf("!pbol_attract\n");
+		}
+		nextAtl = atl;
+
 		returnValue = true;
 	}
 	

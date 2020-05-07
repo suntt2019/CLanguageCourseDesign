@@ -310,6 +310,8 @@ void loadAudio();
 void playAudio(char* name, int volume);
 double musicVolume(double v);
 double foleyVolume(double v);
+void startBGM();
+
 
 void test();
 

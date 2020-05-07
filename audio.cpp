@@ -4,7 +4,7 @@
 
 void loadAudio() {
 	char commandBuffer[400];
-	char audioName[][50] = { "focus","clicked","1" ,"shooting","crash","standerd","score","failure","victory","score0" ,"score1" ,"score2" ,"score3" ,"score4" };
+	char audioName[][50] = { "focus","clicked","1" ,"shooting","crash","standerd","failure","victory","score0" ,"score1" ,"score2" ,"score3" ,"score4" };
 	if (DEBUG_OUTPUT)
 		printf("[DEBUG_OUTPUT]loadAudio()\n");
 	//mciSendString("open \"audio\\1.mp3\" alias gbtc", NULL, 0, NULL);
@@ -61,10 +61,26 @@ void playAudio(char* name,int volume) {
 	return;
 }
 
+void startBGM() {
+	mciSendString("open \"audio\\bgm.mp3\" alias bgm", NULL, 0, NULL);
+	if (DEBUG_OUTPUT)
+		printf("  MCI: %s\n", "open \"audio\\bgm.mp3\" alias bgm");
+	mciSendString("play bgm repeat", NULL, 0, NULL);
+	if (DEBUG_OUTPUT)
+		printf("  MCI: %s\n", "play bgm repeat");
+
+}
+
 double musicVolume(double v) {
 	static double volume;
-	if (v!=-1)
+	if (v != -1) {
+		char commandBuffer[400];
 		volume = v;
+		sprintf(commandBuffer, "setaudio bgm volume to %d",(int)(volume*100));
+		mciSendString(commandBuffer, NULL, 0, NULL);
+		if (DEBUG_OUTPUT)
+			printf("  MCI: %s\n", commandBuffer);
+	}
 	return volume;
 }
 

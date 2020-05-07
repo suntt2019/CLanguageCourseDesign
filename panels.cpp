@@ -15,6 +15,7 @@ void initPanels(MajorPanels* pmp) {
 
 	loadAudio();
 
+	startBGM();
 	//initFLBG(pmp->background, "mainBackGround");
 
 	pmp->backgroundWithLogo = new IMAGE();
@@ -181,8 +182,14 @@ void mapChoosingPanel(MajorPanels* pmp) {
 		case 0: case 1: case 2: case 3:
 			clearBtnFocusDegree(&pmp->mapChoosingPanel.buttonArray[btmCommand]);
 			if (startingIndex + btmCommand < pmpa->cnt) {
+				mciSendString("pause bgm", NULL, 0, NULL);
+				if (DEBUG_OUTPUT)
+					printf("  MCI: %s\n", "pause bgm");
 				startCoreGaming((pmpa->mpa + startingIndex + btmCommand)->dir, pmp);
 				endingPanel(pmp);
+				mciSendString("resume bgm", NULL, 0, NULL);
+				if (DEBUG_OUTPUT)
+					printf("  MCI: %s\n", "resume bgm");
 				return;
 			}else {
 				break;

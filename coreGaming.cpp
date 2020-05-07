@@ -6,6 +6,9 @@ void startCoreGaming(char* dir, MajorPanels* pmp) {
 	if (!loadMap(&md.mi, "maps", dir))
 		handleException(14);
 	//handleException(15);
+	mciSendString("pause bgm", NULL, 0, NULL);
+	if (DEBUG_OUTPUT)
+		printf("  MCI: %s\n","pause bgm");
 	coreGaming(md,pmp);
 	return;
 }
@@ -105,7 +108,7 @@ void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi) {
 					continue;
 				finishedRouteRemainScore = false;
 				settextstyle(40, 0, _T("Î¢ÈíÑÅºÚ Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
-				playAudio("score", foleyVolume(-1)*100);
+				playAudio("score0", foleyVolume(-1)*100);
 				outtextxy(minus(route(pbl[i].pr, pbl[i].latestRemovedBallPosition), makePoint(0, 0)), "+100");
 				pbl[i].score += 100;
 				pbl[i].latestRemovedBallPosition += 100;

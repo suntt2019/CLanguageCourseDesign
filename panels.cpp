@@ -123,14 +123,14 @@ void initOptionPanel(Panel* pop, const MajorPanels* pmp) {
 	initButton(pba + 2, WIDTH / 3 - 60 +50, WIDTH / 3 - 20 +50, HEIGHT / 3 +20, HEIGHT / 3 + 60, "-", 1, pop->backgroundDark);
 	initButton(pba + 3, WIDTH / 3*2 + 20 +70, WIDTH / 3*2 + 60 +70, HEIGHT / 3 +20, HEIGHT / 3 +60, "+", 1, pop->backgroundDark);
 	int startingY = HEIGHT*2 / 3 -(MAIN_MENU_BTN_HEIGHT + MAIN_MENU_BTN_GAP) *2 / 2;
-	char btnStrs[][20] = { "开发人员","返回" };
+	char btnStrs[][20] = { "制作人员","返回" };
 	for (int i = 0; i < 2; i++) {
 		initLineMiddleButton(pba+i+4, startingY + (MAIN_MENU_BTN_HEIGHT + MAIN_MENU_BTN_GAP) * i, MAIN_MENU_BTN_WIDTH, MAIN_MENU_BTN_HEIGHT, btnStrs[i], 1, pop->backgroundDark);
 	}
 }
 
 void initDeveloperPanel(Panel* pdp, const MajorPanels* pmp) {
-	pdp->title = "开发人员";
+	pdp->title = "制作人员";
 	pdp->background = pmp->background;
 	pdp->backgroundDark = pmp->backgroundDark;
 	pdp->flbgArray = pmp->backgroundFlbgArray;
@@ -160,7 +160,7 @@ void mainMenu(MajorPanels* pmp) {
 		BeginBatchDraw();
 		paintPanel(&pmp->mainMenu);
 		settextstyle(30, 0, _T("微软雅黑 Light"), 0, 0, 300, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
-		outtextxy(30, HEIGHT-60, "version: 0.3.0");
+		outtextxy(30, HEIGHT-60, "version: 1.0.0");
 		outtextxy(WIDTH - 260, HEIGHT - 100, "高级语言程序设计课设");
 		outtextxy(WIDTH - 230, HEIGHT - 60, "孙天天  19071110");
 		FlushBatchDraw();
@@ -185,8 +185,8 @@ void mapChoosingPanel(MajorPanels* pmp) {
 				mciSendString("pause bgm", NULL, 0, NULL);
 				if (DEBUG_OUTPUT)
 					printf("  MCI: %s\n", "pause bgm");
-				startCoreGaming((pmpa->mpa + startingIndex + btmCommand)->dir, pmp);
-				endingPanel(pmp);
+				Score sc = startCoreGaming((pmpa->mpa + startingIndex + btmCommand)->dir, pmp);
+				endingPanel(pmp,sc);
 				mciSendString("resume bgm", NULL, 0, NULL);
 				if (DEBUG_OUTPUT)
 					printf("  MCI: %s\n", "resume bgm");
@@ -233,8 +233,17 @@ void mapChoosingPanel(MajorPanels* pmp) {
 
 
 
-void endingPanel(MajorPanels* pmp) {
-
+void endingPanel(MajorPanels* pmp,Score score) {
+	char strBuf[100];
+	sprintf(strBuf, "最终得分：%d", score.finalScore);
+	char strContent[][100] = {
+		"最终分数",
+		"单次最多消除",
+		"最多连击",
+		"END_ARRAY" };
+	sprintf(strContent[0], "最终得分：%d", score.finalScore);
+	sprintf(strContent[1], "单次最多消除：%d", score.greatestCrash);
+	sprintf(strContent[2], "最多连击：%d", score.longestCombo);
 	while (true) {
 		switch (operatePanelsMouseEvents(&pmp->endingPanel)) {
 		case 0:
@@ -245,6 +254,10 @@ void endingPanel(MajorPanels* pmp) {
 		}
 		BeginBatchDraw();
 		paintPanel(&pmp->endingPanel);
+		//paintText(strBuf, 0, 200, 300, 50, 0);
+		for (int i = 0; strcmp(strContent[i], "END_ARRAY") != 0; i++) {
+			paintText(strContent[i], i, 500, 200, 50, 60);
+		}
 		FlushBatchDraw();
 		EndBatchDraw();
 	}
@@ -351,6 +364,15 @@ void optionPanel(MajorPanels* pmp) {
 }
 
 void developerPanel(MajorPanels* pmp) {
+	char strContent[][100] = {
+		"使用开源库：CJson（MIT协议开源，已附协议在源代码中）",
+		"标题字体：优设标题黑（免费商用）",
+		"背景音乐：Sparkle（免费商用）",
+		"    Sparkle by JayJen https ://soundcloud.com/jayjenmusic",
+		"    Creative Commons — Attribution 3.0 Unported — CC BY 3.0",
+		"    Free Download / Stream : https ://bit.ly/jayjen-sparkle",
+		"    Music promoted by Audio Library https ://youtu.be/h5JxHWkrIws",
+		"END_ARRAY"};
 	while (true) {
 		switch (operatePanelsMouseEvents(&pmp->developerPanel)) {
 		case 0:
@@ -360,6 +382,12 @@ void developerPanel(MajorPanels* pmp) {
 		}
 		BeginBatchDraw();
 		paintPanel(&pmp->developerPanel);
+		paintText("开发人员", 0, 200, 140, 40, 40);
+		paintText("姓名：孙天天   学号：19071110", 0, 240, 190, 30, 40);
+		paintText("所使用的资源", 0, 200, 230, 40, 40);
+		for (int i = 0; strcmp(strContent[i],"END_ARRAY")!=0; i++) {
+			paintText(strContent[i], i,240,280,30,40);
+		}
 		FlushBatchDraw();
 		EndBatchDraw();
 	}

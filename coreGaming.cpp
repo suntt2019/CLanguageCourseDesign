@@ -1,7 +1,7 @@
 #include "zuma.h"
 
 
-void startCoreGaming(char* dir, MajorPanels* pmp) {
+Score startCoreGaming(char* dir, MajorPanels* pmp) {
 	MajorData md;
 	if (!loadMap(&md.mi, "maps", dir))
 		handleException(14);
@@ -9,11 +9,10 @@ void startCoreGaming(char* dir, MajorPanels* pmp) {
 	mciSendString("pause bgm", NULL, 0, NULL);
 	if (DEBUG_OUTPUT)
 		printf("  MCI: %s\n","pause bgm");
-	coreGaming(md,pmp);
-	return;
+	return coreGaming(md, pmp);
 }
 
-void coreGaming(MajorData md, MajorPanels* pmp) {
+Score coreGaming(MajorData md, MajorPanels* pmp) {
 	md.gameEnd = false;
 	
 	initAllBallList(&md.pbl, &md.mi);
@@ -21,8 +20,13 @@ void coreGaming(MajorData md, MajorPanels* pmp) {
 	initFlyingBallArray(md.flyingBallArray, &md.mi);
 	initPainting();
 	while (!md.gameEnd) {
-		if (kbhit() && 27 == getch() && pausePanel(pmp))
-			return;
+		if (kbhit() && 27 == getch() && pausePanel(pmp)) {
+			Score sc = initScore();
+			for (int i = 0; i < md.mi.mpi.ballListCount; i++) {
+				sc = addScore(sc,(md.pbl + i)->score);
+			}
+			return sc;
+		}
 		upadateColorInfo(&md);
 		operatingInput(&md);//处理玩家操作
 		computeZuma(&md.zuma);
@@ -35,8 +39,12 @@ void coreGaming(MajorData md, MajorPanels* pmp) {
 		//Sleep(50);	//暂停
 		//TODO:测试一下要不要计时，然后sleep(1000/fps-计时)
 	}
+	Score sc = initScore();
+	for (int i = 0; i < md.mi.mpi.ballListCount; i++) {
+		sc = addScore(sc, (md.pbl + i)->score);
+	}
 	Sleep(3000);
-	return;
+	return sc;
 }
 
 bool checkIfGameover(MapInfo* pmi,BallList* pbl) {
@@ -90,7 +98,7 @@ void gameover(bool isVectory,BallList* pbl,MapInfo* pmi) {
 		for (int i = 0; i < pmi->mpi.ballListCount; i++) {
 			settextcolor(BLACK);
 			settextstyle(20, 0, _T("微软雅黑 Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
-			sprintf(stringBuffer, "score[%d]: %d", i, pbl[i].score);
+			sprintf(stringBuffer, "score[%d]: %d", i, pbl[i].scoreInt);
 			//outtextxy(20, 20 + i * 16, stringBuffer);
 			settextcolor(WHITE);
 		}
@@ -110,7 +118,8 @@ void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi) {
 				settextstyle(40, 0, _T("微软雅黑 Light"), 0, 0, 800, false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
 				playAudio("score0", foleyVolume(-1)*100);
 				outtextxy(minus(route(pbl[i].pr, pbl[i].latestRemovedBallPosition), makePoint(0, 0)), "+100");
-				pbl[i].score += 100;
+				pbl[i].scoreInt += 100;
+				pbl[i].score.finalScore += 100;
 				pbl[i].latestRemovedBallPosition += 100;
 				Sleep(10);
 				//TODO:添加音效和更好的加分展示效果
@@ -120,4 +129,20 @@ void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi) {
 	}
 	
 	
+}
+
+Score addScore(Score sc1, Score sc2) {
+	Score ret;
+	ret.finalScore = sc1.finalScore + sc2.finalScore;
+	ret.greatestCrash = max(sc1.greatestCrash, sc2.greatestCrash);
+	ret.longestCombo = max(sc1.longestCombo, sc2.longestCombo);
+	return ret;
+}
+
+Score initScore() {
+	Score ret;
+	ret.finalScore = 0;
+	ret.greatestCrash = 0;
+	ret.longestCombo = 0;
+	return ret;
 }

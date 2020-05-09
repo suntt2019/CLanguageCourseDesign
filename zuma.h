@@ -73,6 +73,11 @@ typedef struct _Point {
 	double y;
 }Point;
 
+typedef struct _Score {
+	int finalScore;
+	int greatestCrash;
+	int longestCombo;
+}Score;
 
 typedef struct _RouteFunctionArgs {
 	double minP, maxP;
@@ -139,7 +144,8 @@ typedef struct _BallList {
 	Route* pr;
 	int beginningRushRoundRemain;
 	bool isEmpty;
-	int score, latestRemovedBallPosition;
+	int scoreInt, latestRemovedBallPosition;
+	Score score;
 }BallList;
 
 typedef struct _MapInfo {
@@ -197,9 +203,11 @@ typedef struct _MapPreviewArray {
 	int cnt;
 }MapPreviewArray;
 
+
+
 void demo1();
 
-void coreGaming(MajorData md, MajorPanels* pmp);
+Score coreGaming(MajorData md, MajorPanels* pmp);
 void operatingInput(MajorData* pmd);
 void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi);
 void paintImage(MajorData* pmd);
@@ -295,9 +303,9 @@ void initColumnMiddleButton(Button* pb, int x, int btnWidth, int btnHeight, char
 void initButton(Button* pb, int left, int right, int top, int buttom, char* str, double strRelativeSize, IMAGE* texture);
 void previewMaps(MapPreviewArray** ppmpa);
 bool previewSingleMap(char* name, MapPreview* pmp);
-void startCoreGaming(char* dir, MajorPanels* pmp);
+Score startCoreGaming(char* dir, MajorPanels* pmp);
 void initEndingPanel(Panel* pep, const MajorPanels* pmp);
-void endingPanel(MajorPanels* pmp);
+void endingPanel(MajorPanels* pmp, Score score);
 void initPausePanel(Panel* ppp, const MajorPanels* pmp);
 bool pausePanel(MajorPanels* pmp);
 void clearBtnFocusDegree(Button* pbtn);
@@ -311,7 +319,9 @@ void playAudio(char* name, int volume);
 double musicVolume(double v);
 double foleyVolume(double v);
 void startBGM();
-
+void paintText(char* str, int index, int startingX, int startingY, int fontSize, int gap);
+Score addScore(Score sc1, Score sc2);
+Score initScore();
 
 void test();
 

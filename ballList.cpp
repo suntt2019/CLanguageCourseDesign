@@ -33,7 +33,10 @@ void initBallList(BallList* pbl,Route* pr, MapInfo* pmi, unsigned int seed) {
 	pbl->pr = pr;
 	pbl->beginningRushRoundRemain = pr->beginningRushRound;
 	pbl->isEmpty = false;
-	pbl->score = 0;
+	pbl->scoreInt = 0;
+	pbl->score.finalScore = 0;
+	pbl->score.greatestCrash = 0;
+	pbl->score.longestCombo = 0;
 	pbl->latestRemovedBallPosition = 0;
 
 	pbl->tail = (BallOnList*)malloc(sizeof(BallOnList));
@@ -360,7 +363,10 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 			printf("\n[DEBUG_OUTPUT]testAchievingScore():\n");
 			printf("  pbol_new=%p, pbol_begin=%p, pbol_end=%p, cnt=%d\n", pbol_new, pbol_begin, pbol_end, cnt);
 		}
-		pbl->score += SCORE_ACHIEVE_MORE_THAN_3 * (cnt - 3);
+		pbl->scoreInt += SCORE_ACHIEVE_MORE_THAN_3 * (cnt - 3);
+		pbl->score.finalScore += SCORE_ACHIEVE_MORE_THAN_3 * (cnt - 3);
+		if (cnt+1 > pbl->score.greatestCrash)
+			pbl->score.greatestCrash = cnt+1;
 		//free
 		p = pbol_begin;
 		pbol_end->next = NULL;
@@ -375,6 +381,8 @@ bool testAchievingScore(BallList* pbl, MapInfo* pmi, BallOnList* pbol_new, int a
 					pbol_attract->attractLevel, attractionLevelBase + 1, p);
 			}
 			pbol_attract->attractLevel = attractionLevelBase + 1;
+			if (pbol_attract->attractLevel > pbl->score.longestCombo)
+				pbl->score.longestCombo = pbol_attract->attractLevel;
 		}
 
 		char audioNameBuf[30] = "";
@@ -432,7 +440,8 @@ void testCrash(BallList* pbl, FlyingBallArray& fba, int index, MapInfo* pmi) {
 }
 
 void removeBallOnList(BallList* pbl,BallOnList* p) {
-	pbl->score += SCORE_REMOVE_BALL;
+	pbl->scoreInt += SCORE_REMOVE_BALL;
+	pbl->score.finalScore += SCORE_REMOVE_BALL;
 	pbl->latestRemovedBallPosition = p->position;
 	free(p);
 	return;

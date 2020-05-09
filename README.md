@@ -5,12 +5,7 @@
 
 ### 最后收尾
 
-* 显示分数
-* 显示开发者页面
-Sparkle by JayJen https://soundcloud.com/jayjenmusic
-Creative Commons — Attribution 3.0 Unported — CC BY 3.0
-Free Download / Stream: https://bit.ly/jayjen-sparkle
-Music promoted by Audio Library https://youtu.be/h5JxHWkrIws
+
 
 ### DEBUG
 * 单色图中，打掉一条之后，另一条会吸走祖玛口中的球（如果此时那个球与另一条球列接触）

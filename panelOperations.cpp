@@ -209,3 +209,13 @@ void clearBtnFocusDegree(Button* pbtn) {
 	pbtn->focusDegree = 0;
 	return;
 }
+
+
+
+void paintText(char* str,int index,int startingX,int startingY,int fontSize,int gap) {
+	settextstyle(fontSize,0,_T("Î¢ÈíÑÅºÚ Light"), 0, 0,500,false, false, false, NULL, NULL, NULL, ANTIALIASED_QUALITY, NULL);
+	outtextxy(startingX, startingY +index* gap, str);
+	index++;
+
+	return;
+}

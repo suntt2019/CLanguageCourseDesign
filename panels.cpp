@@ -243,7 +243,7 @@ void endingPanel(MajorPanels* pmp,Score score) {
 		"END_ARRAY" };
 	sprintf(strContent[0], "最终得分：%d", score.finalScore);
 	sprintf(strContent[1], "单次最多消除：%d", score.greatestCrash);
-	sprintf(strContent[2], "最多连击：%d", score.longestCombo);
+	sprintf(strContent[2], "最多连击：%d", score.longestCombo+1);
 	while (true) {
 		switch (operatePanelsMouseEvents(&pmp->endingPanel)) {
 		case 0:

@@ -14,37 +14,30 @@ Score startCoreGaming(char* dir, MajorPanels* pmp) {
 
 Score coreGaming(MajorData md, MajorPanels* pmp) {
 	md.gameEnd = false;
-	
 	initAllBallList(&md.pbl, &md.mi);
 	initZuma(&md);
 	initFlyingBallArray(md.flyingBallArray, &md.mi);
 	initPainting();
 	while (!md.gameEnd) {
-		if (kbhit() && 27 == getch() && pausePanel(pmp)) {
+		upadateColorInfo(&md);
+		operateMouseEvents(&md);//处理玩家操作
+		computeZuma(&md.zuma);
+		computeFlyingBalls(md.flyingBallArray, md.zuma, *md.pbl, &md.mi);//计算飞出球
+		computeAllBallList(md.pbl, &md.mi);
+		if (kbhit() && 27 == getch() && pausePanel(pmp) || (md.gameEnd = checkIfGameover(&md.mi, md.pbl)) ) {
 			Score sc = initScore();
 			for (int i = 0; i < md.mi.mpi.ballListCount; i++) {
-				sc = addScore(sc,(md.pbl + i)->score);
+				sc = addScore(sc, (md.pbl + i)->score);
 			}
+			if(md.gameEnd)
+				Sleep(3000);
 			return sc;
 		}
-		upadateColorInfo(&md);
-		operatingInput(&md);//处理玩家操作
-		computeZuma(&md.zuma);
-		computingFlyingBalls(md.flyingBallArray, md.zuma, *md.pbl, &md.mi);//计算飞出球
-		computeAllBallList(md.pbl, &md.mi);
-		if(md.gameEnd = checkIfGameover(&md.mi, md.pbl))
-			break;
 		computeAllBallListPoint(md.pbl, &md.mi);
 		paintImage(&md);//绘制图像
 		//Sleep(50);	//暂停
 		//TODO:测试一下要不要计时，然后sleep(1000/fps-计时)
 	}
-	Score sc = initScore();
-	for (int i = 0; i < md.mi.mpi.ballListCount; i++) {
-		sc = addScore(sc, (md.pbl + i)->score);
-	}
-	Sleep(3000);
-	return sc;
 }
 
 bool checkIfGameover(MapInfo* pmi,BallList* pbl) {

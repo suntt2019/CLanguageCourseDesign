@@ -18,9 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="demo1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="paint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,9 +54,6 @@
     <ClCompile Include="flyingBall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="demo2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="panelOperations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -67,9 +61,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="panels.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="audio.cpp">

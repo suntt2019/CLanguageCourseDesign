@@ -8,7 +8,7 @@ void initFlyingBallArray(FlyingBallArray& fba, MapInfo* pmi) {
 	return;
 }
 
-void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi) {
+void computeFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi) {
 	fba.pfb[fba.size - 2].position.x = zuma.position.x
 		+ pmi->mpi.deltaMouthPosition.y * cos(zuma.angle) + pmi->mpi.deltaMouthPosition.x * sin(zuma.angle);
 	fba.pfb[fba.size - 2].position.y = zuma.position.y

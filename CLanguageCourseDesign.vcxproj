@@ -32,8 +32,6 @@
     <ClCompile Include="cJSON\cJSON.c" />
     <ClCompile Include="coreGaming.cpp" />
     <ClCompile Include="coreGamingInput.cpp" />
-    <ClCompile Include="demo1.cpp" />
-    <ClCompile Include="demo2.cpp" />
     <ClCompile Include="flyingBall.cpp" />
     <ClCompile Include="loadMap.cpp" />
     <ClCompile Include="main.cpp" />
@@ -43,7 +41,6 @@
     <ClCompile Include="previewMap.cpp" />
     <ClCompile Include="route.cpp" />
     <ClCompile Include="panels.cpp" />
-    <ClCompile Include="test.cpp" />
     <ClCompile Include="zuma.cpp" />
     <ClCompile Include="zumaExceptions.cpp" />
     <ClCompile Include="audio.cpp" />

@@ -205,11 +205,10 @@ typedef struct _MapPreviewArray {
 
 
 
-void demo1();
 
 Score coreGaming(MajorData md, MajorPanels* pmp);
 void operatingInput(MajorData* pmd);
-void computingFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi);
+void computeFlyingBalls(FlyingBallArray& fba, Zuma zuma, BallList& bl, MapInfo* pmi);
 void paintImage(MajorData* pmd);
 void initBallList(BallList* pbl, Route* pr, MapInfo* pmi, unsigned int seed);
 void viewBallList(BallList* pbl);
@@ -282,7 +281,6 @@ bool parseGeneratingBallMethod(Route* pr, const cJSON* json, char* folder, char*
 void paintViewBallList(BallList* pbl, MapInfo* pmi, int index);
 void settleScore(bool isVectory, BallList* pbl, MapInfo* pmi);
 void outtextxy(Point p, LPCTSTR str);
-void demo2();
 void initLineMiddleButton(Button* pb, int y, int width, int height, char* str, double strRelativeSize, IMAGE* texture);
 void paintPanel(Panel* ppanel);
 void paintButton(Button* pb);
@@ -323,7 +321,6 @@ void paintText(char* str, int index, int startingX, int startingY, int fontSize,
 Score addScore(Score sc1, Score sc2);
 Score initScore();
 
-void test();
 
 
 

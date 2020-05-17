@@ -19,7 +19,7 @@ void operateMouseEvents(MajorData* pmd) {
 
 		if (mmsg.mkLButton && pmd->zuma.shootingCD == 0) {
 			playAudio("shooting", foleyVolume(-1)*100);
-			launchFlyingBall(pmd->flyingBallArray, &pmd->mi.ri);
+			generateFlyingBall(pmd->flyingBallArray, &pmd->mi.ri);
 			pmd->zuma.shootingCD = pmd->mi.gs.shootingCD;
 			//printf("shoot!!\n");
 		}

@@ -4,6 +4,8 @@
 
 本科课程中的高级语言程序设计课设，这里选择自选内容，仿制一款经典的游戏《[祖玛](https://baike.baidu.com/item/%E7%A5%96%E7%8E%9B/132172)》。
 
+本项目按课程要求使用[easyx](https://easyx.cn/)图形库，仅支持windows平台。
+
 本项目按课程要求使用 Visual Studio 开发，下载源码后需要安装[easyx](https://easyx.cn/c/download)，之后由`CLanguageCourseDesign.sln`打开项目即可。
 
 
@@ -32,8 +34,8 @@
 * 使用开源库：CJson（MIT协议开源，已附协议在源代码中）
 * 标题字体：优设标题黑（免费商用）
 * 背景音乐：Sparkle（免费商用）
-  * Sparkle by JayJen https ://soundcloud.com/jayjenmusic",
-  * Creative Commons — Attribution 3.0 Unported — CC BY 3.0",
-  * Free Download / Stream : https ://bit.ly/jayjen-sparkle",
+  * Sparkle by JayJen https ://soundcloud.com/jayjenmusic
+  * Creative Commons — Attribution 3.0 Unported — CC BY 3.0
+  * Free Download / Stream : https ://bit.ly/jayjen-sparkle
   * Music promoted by Audio Library https ://youtu.be/h5JxHWkrIws
 

@@ -16,19 +16,21 @@ void initPanels(MajorPanels* pmp) {
 	loadAudio();
 
 	startBGM();
-	//initFLBG(pmp->background, "mainBackGround");
 
 	pmp->backgroundWithLogo = new IMAGE();
 	loadimage(pmp->backgroundWithLogo, "image\\main_background_with_logo.jpg", WIDTH, HEIGHT, true);
 	pmp->backgroundWithLogoDark = new IMAGE();
 	loadimage(pmp->backgroundWithLogoDark, "image\\main_background_with_logo_dark.jpg", WIDTH, HEIGHT, true);
-	loadFLBG(&pmp->backgroundWithLogoFlbgArray, "mainBackGroundWithLogo");
 	pmp->background = new IMAGE();
 	loadimage(pmp->background, "image\\main_background.jpg", WIDTH, HEIGHT, true);
 	pmp->backgroundDark = new IMAGE();
 	loadimage(pmp->backgroundDark, "image\\main_background_dark.jpg", WIDTH, HEIGHT, true);
 	loadFLBG(&pmp->backgroundFlbgArray, "mainBackGround");
-
+	// initFLBG函数用于生成游戏运行时使用的图像文件，但由于超出课程要求，这里注释掉而使用保存好的图像文件
+	// 若FLBG图像文件（image/FLBG_mainBackGround_0至48）丢失，可以解除注释（这里的和initFLBG函数定义处的）在游戏启动时自动生成
+	// initFLBG(pmp->background, "mainBackGround");
+	loadFLBG(&pmp->backgroundWithLogoFlbgArray, "mainBackGroundWithLogo");
+	
 	initMainMenu(&pmp->mainMenu,pmp);
 	initMapChoosingPanel(&pmp->mapChoosingPanel,pmp);
 	initEndingPanel(&pmp->endingPanel, pmp);

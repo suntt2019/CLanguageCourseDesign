@@ -31,6 +31,8 @@ int operatePanelsMouseEvents(Panel* pp) {
 
 
 /*
+ initFLBG函数用于生成游戏运行时使用的图像文件，但由于超出课程要求，这里注释掉而使用保存好的图像文件
+ 若FLBG图像文件（image/FLBG_mainBackGround_0至48）丢失，可以解除注释（这里的和initPanels函数中的）在游戏启动时自动生成
 void initFLBG(IMAGE* pbg, char* name) {
 	char strBuf[STRING_BUFFER_SIZE];
 	DWORD* pMem = GetImageBuffer(pbg);
